@@ -487,13 +487,18 @@ const socket = io(import.meta.env.VITE_SOCKET_URL || window.location.origin, {
 ### Events to Emit (Frontend → Backend)
 | Event | Payload | When to Emit |
 | :--- | :--- | :--- |
-| `join_plan_room` | `{ "planId": "pln_01" }` | When viewing a savings plan page |
-| `leave_plan_room` | `{ "planId": "pln_01" }` | When leaving a savings plan page |
+| `join:plan` *(or `join_plan_room`)* | `"pln_01"` *(or `{ "planId": "pln_01" }`)* | When viewing a savings plan page |
+| `leave:plan` *(or `leave_plan_room`)* | `"pln_01"` *(or `{ "planId": "pln_01" }`)* | When leaving a savings plan page |
+| `join:user` | `"usr_01"` *(or `{ "userId": "usr_01" }`)* | On login/session restore to join personal notification room |
 
 ### Events to Listen For (Backend → Frontend)
 | Event | Payload | What Happened |
 | :--- | :--- | :--- |
-| `new_group_message` | `{ "planId": "pln_01", "message": { ... } }` | A chat message, deposit `ACTIVITY_ALERT`, or `PAYMENT_REQUEST` was posted in `planId` |
-| `plan_updated` | `{ "planId": "pln_01", "currentAmount": 84000, "targetAmount": 100000, "progressPercent": 84 }` | Someone contributed to the savings plan |
-| `wallet_updated` | `{ "balance": 45000 }` | Logged-in user's wallet balance changed (e.g. received a P2P transfer) |
-| `notification` | `{ "notification": { "id": "...", "title": "...", "body": "...", "type": "..." } }` | New real-time notification arrived for the logged-in user |
+| `chat:message` | `{ "id": "msg_01", "planId": "pln_01", "type": "CHAT" \| "ACTIVITY_ALERT", "content": "...", "sender": { ... }, "metadata": { ... } }` | A chat message, deposit `ACTIVITY_ALERT`, or `PAYMENT_REQUEST` was posted in `planId` |
+| `savings:updated` | `{ "plan": { ... }, "contribution": { ... }, "contributor": { ... } }` | Someone contributed to the savings plan |
+| `savings:member_joined` | `{ "planId": "pln_01", "user": { ... } }` | A new member joined the group savings plan via invite code |
+| `wallet:updated` | `{ "balance": 45000, "currency": "NGN" }` | Logged-in user's wallet balance changed (e.g. funded, contributed, or P2P transfer) |
+| `p2p:received` | `{ "from": { ... }, "amount": 15000, "note": "..." }` | Logged-in user received an instant P2P transfer |
+| `notification:new` | `{ "notification": { "id": "...", "title": "...", "message": "...", "body": "...", "type": "..." } }` | New real-time notification arrived for the logged-in user |
+| `transfer:request_created` | `{ "id": "req_01", "planId": "pln_01", "amount": 5000, "status": "PENDING", ... }` | A group bill split / payment request was created |
+| `transfer:request_paid` | `{ "id": "req_01", "planId": "pln_01", "amount": 5000, "status": "PAID", "paidBy": "hafidh", ... }` | A group bill split / payment request was settled |

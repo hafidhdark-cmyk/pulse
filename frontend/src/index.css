@@ -4,18 +4,17 @@
 
 @layer base {
   body {
-    background-color: #F4F8FF;
+    background-color: #F8FAFC;
     color: #0F172A;
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* Currency, percentages, and metrics tabular figures */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
 }
 
-/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -24,19 +23,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
-}
-
-/* Brand hero gradient */
-.bg-brand-hero {
-  background: linear-gradient(125deg, #1E3FA3 0%, #235EE3 52%, #1994E8 100%);
-}
-
-/* Progress bar fill gradient */
-.bg-brand-progress {
-  background: linear-gradient(90deg, #1D4ED8 0%, #0EA5E9 100%);
+  background: rgba(148, 163, 184, 0.55);
 }

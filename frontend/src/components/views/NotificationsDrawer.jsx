@@ -9,28 +9,32 @@ export default function NotificationsDrawer({ isOpen, onClose }) {
 
   const getIcon = (type) => {
     switch (type) {
+      case 'P2P_RECEIVE':
       case 'P2P_RECEIVED':
-        return <ArrowDownLeft size={16} className="text-[#15803D]" />;
+        return <ArrowDownLeft size={15} className="text-emerald-700" />;
       case 'GOAL_PROGRESS':
-        return <Trophy size={16} className="text-amber-500" />;
+        return <Trophy size={15} className="text-amber-600" />;
+      case 'REQUEST_PAID':
       case 'BILL_SPLIT':
-        return <Receipt size={16} className="text-[#1D4ED8]" />;
+        return <Receipt size={15} className="text-[#1D4ED8]" />;
       default:
-        return <Bell size={16} className="text-[#1D4ED8]" />;
+        return <Bell size={15} className="text-slate-600" />;
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Activity & Notifications">
+    <Modal isOpen={isOpen} onClose={onClose} title="Notifications">
       <div className="space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-          <span className="text-xs text-[#64748B] font-semibold">
-            {unreadCount > 0 ? `${unreadCount} unread alert${unreadCount > 1 ? 's' : ''}` : 'All alerts caught up'}
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
+          <span className="text-xs text-slate-500 font-medium">
+            {unreadCount > 0
+              ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`
+              : 'All caught up'}
           </span>
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="flex items-center gap-1 text-xs text-[#1D4ED8] hover:text-[#1E40AF] font-bold transition"
+              className="flex items-center gap-1 text-xs text-[#1D4ED8] hover:text-[#1E40AF] font-semibold transition"
             >
               <CheckCheck size={14} />
               <span>Mark all read</span>
@@ -39,30 +43,34 @@ export default function NotificationsDrawer({ isOpen, onClose }) {
         </div>
 
         {notifications.length === 0 ? (
-          <div className="py-12 text-center text-xs text-[#64748B]">
+          <div className="py-10 text-center text-xs text-slate-500">
             No notifications yet.
           </div>
         ) : (
-          <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-            {notifications.map(n => (
+          <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+            {notifications.map((n) => (
               <div
                 key={n.id}
-                className={`p-3.5 rounded-xl border transition ${
+                className={`p-3.5 rounded-lg border transition ${
                   n.isRead
-                    ? 'bg-[#F8FAFC] border-[#DCE7F9] text-[#64748B]'
-                    : 'bg-[#EFF6FF] border-[#BFDBFE] text-[#0F172A] shadow-sm'
+                    ? 'bg-white border-slate-200 text-slate-600'
+                    : 'bg-blue-50/50 border-blue-200 text-slate-900'
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-white shrink-0 shadow-sm">
+                  <div className="p-2 rounded-md bg-slate-100 shrink-0">
                     {getIcon(n.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold text-[#0F172A]">{n.title}</p>
-                      <span className="text-[10px] text-[#64748B] font-mono">{formatDate(n.createdAt)}</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold text-slate-900 truncate">{n.title}</p>
+                      <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                        {formatDate(n.createdAt)}
+                      </span>
                     </div>
-                    <p className="text-xs text-[#475569] mt-0.5">{n.body}</p>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      {n.message || n.body}
+                    </p>
                   </div>
                 </div>
               </div>

@@ -30,6 +30,7 @@ router.post('/transfers/p2p', requireAuth, async (req, res, next) => {
     });
 
     return res.json({
+      message: 'Transfer successful',
       transaction: result.transaction,
       newBalance: result.newBalance,
       recipient: result.recipient
@@ -76,13 +77,20 @@ router.post('/transfers/request/:id/pay', requireAuth, async (req, res, next) =>
       emitToPlan(result.paymentRequest.planId, 'transfer:request_paid', result.paymentRequest);
     }
 
+    emitToUser(req.user.id, 'wallet:updated', {
+      balance: result.newBalance,
+      currency: 'NGN'
+    });
+    emitToUser(result.creator.id, 'wallet:updated', {
+      balance: result.creatorBalance,
+      currency: 'NGN'
+    });
     emitToUser(result.creator.id, 'notification:new', {
-      title: 'Payment Request Settled!',
-      amount: result.paymentRequest.amount,
-      paidBy: req.user
+      notification: result.creatorNotification
     });
 
     return res.json({
+      message: 'Payment request settled',
       paymentRequest: result.paymentRequest,
       transaction: result.transaction,
       newBalance: result.newBalance

@@ -14,9 +14,9 @@ export default function Toast() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 max-w-sm flex items-center gap-3 bg-[#131d2e] border border-slate-700/80 text-slate-100 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-3 duration-200">
+    <div className="fixed top-4 right-4 left-4 sm:left-auto z-50 sm:max-w-sm flex items-center gap-3 bg-slate-900 border border-slate-800 text-slate-100 px-4 py-3 rounded-lg shadow-lg">
       {icons[toast.type] || icons.info}
-      <p className="text-sm font-medium">{toast.msg}</p>
+      <p className="text-xs sm:text-sm font-medium leading-snug">{toast.msg}</p>
     </div>
   );
 }

@@ -18,7 +18,7 @@ export function NotificationProvider({ children }) {
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
     } catch (err) {
-      console.error("Failed to load notifications:", err);
+      console.error('Failed to load notifications:', err);
     }
   }, [user]);
 
@@ -26,46 +26,55 @@ export function NotificationProvider({ children }) {
     setToast({ msg, type, id: Date.now() });
     setTimeout(() => {
       setToast(null);
-    }, 4000);
+    }, 3500);
   }, []);
 
   useEffect(() => {
-    if (user) {
-      fetchNotifications();
-
-      const socket = getSocket();
-      const handleNotification = (payload) => {
-        if (payload?.notification) {
-          setNotifications(prev => [payload.notification, ...prev]);
-          setUnreadCount(c => c + 1);
-          showToast(payload.notification.title + ": " + payload.notification.body, 'success');
-        }
-      };
-
-      socket.on('notification', handleNotification);
-      return () => socket.off('notification', handleNotification);
+    if (!user) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
     }
+
+    fetchNotifications();
+
+    const socket = getSocket();
+    socket.emit('join:user', user.id);
+
+    const handleNotification = (payload) => {
+      fetchNotifications();
+      const notif = payload?.notification || payload;
+      if (notif?.title) {
+        const text = notif.message || notif.body || '';
+        showToast(text ? `${notif.title} — ${text}` : notif.title, 'success');
+      }
+    };
+
+    socket.on('notification:new', handleNotification);
+    return () => socket.off('notification:new', handleNotification);
   }, [user, fetchNotifications, showToast]);
 
   const markAllAsRead = async () => {
     try {
       await api.notifications.markAllRead();
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (err) {
-      console.error("Failed to mark read:", err);
+      console.error('Failed to mark notifications read:', err);
     }
   };
 
   return (
-    <NotificationContext.Provider value={{
-      notifications,
-      unreadCount,
-      refreshNotifications: fetchNotifications,
-      markAllAsRead,
-      showToast,
-      toast
-    }}>
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        unreadCount,
+        refreshNotifications: fetchNotifications,
+        markAllAsRead,
+        showToast,
+        toast
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );
@@ -73,6 +82,6 @@ export function NotificationProvider({ children }) {
 
 export function useNotifications() {
   const context = useContext(NotificationContext);
-  if (!context) throw new Error("useNotifications must be used within a NotificationProvider");
+  if (!context) throw new Error('useNotifications must be used within a NotificationProvider');
   return context;
 }

@@ -20,28 +20,40 @@ export function WalletProvider({ children }) {
     try {
       setLoading(true);
       const data = await api.wallet.getWallet();
-      setWallet(data);
+      setWallet({
+        balance: data.balance ?? 0,
+        totalSaved: data.totalSaved ?? 0,
+        currency: data.currency || 'NGN',
+        transactions: data.transactions || []
+      });
     } catch (err) {
-      console.error("Failed to load wallet:", err);
+      console.error('Failed to load wallet:', err);
     } finally {
       setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
-    if (user) {
-      fetchWallet();
-
-      const socket = getSocket();
-      const handleWalletUpdated = (payload) => {
-        if (payload && payload.balance !== undefined) {
-          setWallet(prev => ({ ...prev, balance: payload.balance }));
-        }
-      };
-
-      socket.on('wallet_updated', handleWalletUpdated);
-      return () => socket.off('wallet_updated', handleWalletUpdated);
+    if (!user) {
+      setWallet({ balance: 0, totalSaved: 0, currency: 'NGN', transactions: [] });
+      return;
     }
+
+    fetchWallet();
+
+    const socket = getSocket();
+    socket.emit('join:user', user.id);
+
+    const handleWalletUpdated = () => {
+      fetchWallet();
+    };
+
+    socket.on('wallet:updated', handleWalletUpdated);
+    socket.on('p2p:received', handleWalletUpdated);
+    return () => {
+      socket.off('wallet:updated', handleWalletUpdated);
+      socket.off('p2p:received', handleWalletUpdated);
+    };
   }, [user, fetchWallet]);
 
   const fundWallet = async (amount, method = 'demo', reference = null) => {
@@ -57,13 +69,15 @@ export function WalletProvider({ children }) {
   };
 
   return (
-    <WalletContext.Provider value={{
-      ...wallet,
-      loading,
-      refreshWallet: fetchWallet,
-      fundWallet,
-      sendP2P
-    }}>
+    <WalletContext.Provider
+      value={{
+        ...wallet,
+        loading,
+        refreshWallet: fetchWallet,
+        fundWallet,
+        sendP2P
+      }}
+    >
       {children}
     </WalletContext.Provider>
   );
@@ -71,6 +85,6 @@ export function WalletProvider({ children }) {
 
 export function useWallet() {
   const context = useContext(WalletContext);
-  if (!context) throw new Error("useWallet must be used within a WalletProvider");
+  if (!context) throw new Error('useWallet must be used within a WalletProvider');
   return context;
 }

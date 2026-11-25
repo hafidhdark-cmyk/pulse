@@ -53,6 +53,7 @@ router.post('/savings/join', requireAuth, async (req, res, next) => {
     }
 
     return res.json({
+      message: 'Joined group savings plan',
       plan: result.plan,
       membership: result.membership
     });
@@ -95,9 +96,11 @@ router.post('/savings/:id/contribute', requireAuth, async (req, res, next) => {
     });
 
     return res.json({
+      message: 'Contribution successful',
       plan: result.plan,
       walletBalance: result.walletBalance,
-      contribution: result.contribution
+      contribution: result.contribution,
+      transaction: result.transaction
     });
   } catch (err) {
     return next(err);

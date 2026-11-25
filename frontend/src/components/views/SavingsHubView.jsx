@@ -1,164 +1,201 @@
 import React, { useState } from 'react';
-import { formatNaira, formatDate } from '../../utils/formatters';
+import { formatNaira } from '../../utils/formatters';
 import ProgressBar from '../common/ProgressBar';
 import Badge from '../common/Badge';
-import { 
-  PiggyBank, 
-  Users, 
-  User, 
-  Plus, 
-  KeyRound, 
-  ArrowRight, 
-  Calendar,
-  Sparkles,
-  Zap
+import collabHeroImg from '../../assets/collab-savings-hero.jpg';
+import vaultIllustration from '../../assets/group-vault-illustration.jpg';
+import {
+  Users,
+  User,
+  Plus,
+  KeyRound,
+  ArrowRight
 } from 'lucide-react';
 
 export default function SavingsHubView({ plans = [], onSelectPlan, onOpenCreate, onOpenJoin }) {
-  const [filter, setFilter] = useState('ALL'); // ALL, GROUP, PERSONAL
+  const [filter, setFilter] = useState('ALL');
 
-  const filteredPlans = (plans || []).filter(p => {
+  const filteredPlans = (plans || []).filter((p) => {
     if (filter === 'ALL') return true;
     return p.type === filter;
   });
 
   return (
     <div className="space-y-6">
-      {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">Savings Vaults</h2>
-          <p className="text-xs text-[#52627A]">Multiplayer group pools and personal milestones</p>
+      {/* Collaborative Savings Banner Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+        <div className="lg:col-span-8 space-y-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="primary">Collaborative &amp; Personal Vaults</Badge>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Pool funds together or save toward personal milestones
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
+            Create a shared group plan to generate an invite code for your circle, track each member&apos;s share on a live leaderboard, and coordinate in the activity chat.
+          </p>
+          <div className="pt-2 flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={onOpenCreate}
+              className="flex items-center justify-center gap-1.5 h-10 px-4 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-semibold rounded-lg transition"
+            >
+              <Plus size={15} strokeWidth={2.5} />
+              <span>New Savings Plan</span>
+            </button>
+
+            <button
+              onClick={onOpenJoin}
+              className="flex items-center justify-center gap-1.5 h-10 px-4 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 transition"
+            >
+              <KeyRound size={14} />
+              <span>Join with Invite Code</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={onOpenJoin}
-            className="flex items-center gap-1.5 h-11 px-4 bg-white hover:bg-slate-50 text-[#1D4ED8] text-xs font-bold rounded-xl border border-[#DCE7F9] shadow-sm transition"
-          >
-            <KeyRound size={15} />
-            <span>Join with Code</span>
-          </button>
-
-          <button
-            onClick={onOpenCreate}
-            className="flex items-center gap-1.5 h-11 px-5 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-bold rounded-xl transition shadow-md shadow-blue-500/20"
-          >
-            <Plus size={16} strokeWidth={2.5} />
-            <span>New Goal</span>
-          </button>
+        <div className="lg:col-span-4">
+          <img
+            src={collabHeroImg}
+            alt="Collaborative savings team"
+            className="w-full h-40 sm:h-44 object-cover rounded-lg border border-slate-200"
+          />
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 border-b border-[#DCE7F9] pb-2">
+      <div className="flex gap-1.5 border-b border-slate-200 pb-3 overflow-x-auto">
         <button
           onClick={() => setFilter('ALL')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-            filter === 'ALL' ? 'bg-[#EFF6FF] text-[#1D4ED8] shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+            filter === 'ALL'
+              ? 'bg-slate-900 text-white'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          All Vaults ({plans.length})
+          All Plans ({plans.length})
         </button>
         <button
           onClick={() => setFilter('GROUP')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-            filter === 'GROUP' ? 'bg-[#EFF6FF] text-[#1D4ED8] shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+            filter === 'GROUP'
+              ? 'bg-slate-900 text-white'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          Group Pools ({plans.filter(p => p.type === 'GROUP').length})
+          Group Pools ({plans.filter((p) => p.type === 'GROUP').length})
         </button>
         <button
           onClick={() => setFilter('PERSONAL')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-            filter === 'PERSONAL' ? 'bg-[#EFF6FF] text-[#1D4ED8] shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+            filter === 'PERSONAL'
+              ? 'bg-slate-900 text-white'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          Personal Targets ({plans.filter(p => p.type === 'PERSONAL').length})
+          Personal ({plans.filter((p) => p.type === 'PERSONAL').length})
         </button>
       </div>
 
       {/* Plans Grid */}
       {filteredPlans.length === 0 ? (
-        <div className="bg-white border border-[#DCE7F9] rounded-2xl p-12 text-center shadow-card">
-          <PiggyBank size={40} className="mx-auto text-slate-400 mb-3" />
-          <h3 className="text-base font-bold text-[#0F172A]">No savings plans yet</h3>
-          <p className="text-xs text-[#64748B] mt-1 max-w-sm mx-auto">
-            Start a group savings kitty with friends or set a private personal target.
+        <div className="bg-white border border-slate-200 rounded-xl p-8 sm:p-10 text-center">
+          <img
+            src={vaultIllustration}
+            alt="Shared savings vault"
+            className="w-24 h-24 mx-auto rounded-xl object-cover border border-slate-200 mb-4"
+          />
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">No savings plans in this view</h3>
+          <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
+            Create a group savings pool to save with friends or start a personal target.
           </p>
-          <button
-            onClick={onOpenCreate}
-            className="mt-4 h-11 px-5 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-bold rounded-xl transition"
-          >
-            Create Your First Goal
-          </button>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <button
+              onClick={onOpenCreate}
+              className="h-10 px-4 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-semibold rounded-lg transition"
+            >
+              Create Plan
+            </button>
+            <button
+              onClick={onOpenJoin}
+              className="h-10 px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition"
+            >
+              Enter Invite Code
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {filteredPlans.map(plan => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
+          {filteredPlans.map((plan) => (
             <div
               key={plan.id}
               onClick={() => onSelectPlan(plan.id)}
-              className="group bg-white hover:bg-[#F8FAFF] border border-[#DCE7F9] hover:border-[#1D4ED8]/50 rounded-2xl p-6 transition-all duration-200 shadow-card cursor-pointer flex flex-col justify-between"
+              className="group bg-white hover:bg-slate-50/50 border border-slate-200 hover:border-slate-300 rounded-xl overflow-hidden transition cursor-pointer flex flex-col justify-between h-full"
             >
-              <div>
+              <div className="p-5 pb-4">
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <span className="p-2.5 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-[#1D4ED8]">
-                      {plan.type === 'GROUP' ? <Users size={18} /> : <User size={18} />}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center shrink-0">
+                      {plan.type === 'GROUP' ? <Users size={17} /> : <User size={17} />}
                     </span>
-                    <div>
-                      <h3 className="text-base font-bold text-[#0F172A] group-hover:text-[#1D4ED8] transition">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#1D4ED8] transition truncate">
                         {plan.title}
                       </h3>
-                      <p className="text-xs text-[#64748B] line-clamp-1">{plan.description || "Savings plan"}</p>
+                      <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                        {plan.description || (plan.type === 'GROUP' ? 'Group savings plan' : 'Personal savings plan')}
+                      </p>
                     </div>
                   </div>
 
-                  <Badge variant={plan.type === 'GROUP' ? 'cyan' : 'default'}>
-                    {plan.frequency}
+                  <Badge variant={plan.type === 'GROUP' ? 'primary' : 'default'}>
+                    {plan.type === 'GROUP' ? 'Group' : 'Personal'}
                   </Badge>
                 </div>
 
-                {/* Progress bar */}
-                <div className="my-4">
-                  <ProgressBar
-                    current={plan.currentAmount}
-                    target={plan.targetAmount}
-                    percent={plan.progressPercent}
-                  />
-                </div>
-
-                {/* Stats row */}
-                <div className="flex justify-between items-center text-xs pt-1">
+                <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200/80 rounded-lg mb-3.5">
                   <div>
-                    <span className="text-[#64748B] block text-[10px] font-semibold">POOLED</span>
-                    <span className="font-mono font-bold text-[#1D4ED8] tabular-nums">{formatNaira(plan.currentAmount)}</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block">
+                      Current Balance
+                    </span>
+                    <span className="text-sm font-mono font-bold text-slate-900 tabular-nums mt-0.5 block">
+                      {formatNaira(plan.currentAmount)}
+                    </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[#64748B] block text-[10px] font-semibold">TARGET</span>
-                    <span className="font-mono font-bold text-[#0F172A] tabular-nums">{formatNaira(plan.targetAmount)}</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block">
+                      Target Amount
+                    </span>
+                    <span className="text-sm font-mono font-semibold text-slate-700 tabular-nums mt-0.5 block">
+                      {formatNaira(plan.targetAmount)}
+                    </span>
                   </div>
                 </div>
+
+                <ProgressBar
+                  current={plan.currentAmount}
+                  target={plan.targetAmount}
+                  percent={plan.progressPercent ?? plan.progressPercentage}
+                />
               </div>
 
-              {/* Bottom footer with member count & invite code */}
-              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-[#64748B]">
+              <div className="px-5 py-3 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
                 <div className="flex items-center gap-2">
-                  {plan.type === 'GROUP' && (
-                    <span className="flex items-center gap-1 font-mono text-[11px] bg-[#EFF6FF] text-[#1D4ED8] px-2 py-0.5 rounded-md border border-[#BFDBFE] font-bold">
+                  {plan.type === 'GROUP' && plan.inviteCode && (
+                    <span className="font-mono text-[11px] bg-white text-slate-800 px-2 py-0.5 rounded border border-slate-200 font-semibold">
                       {plan.inviteCode}
                     </span>
                   )}
-                  {plan.memberCount > 1 && (
-                    <span>{plan.memberCount} members</span>
-                  )}
+                  <span>
+                    {plan.memberCount || 1} {(plan.memberCount || 1) === 1 ? 'member' : 'members'}
+                  </span>
+                  <span>•</span>
+                  <span className="capitalize">{(plan.frequency || 'FLEXIBLE').toLowerCase()}</span>
                 </div>
 
-                <div className="flex items-center gap-1 text-[#1D4ED8] group-hover:translate-x-1 transition-transform font-bold">
-                  <span>Open Vault</span>
-                  <ArrowRight size={14} />
-                </div>
+                <span className="inline-flex items-center gap-1 text-[#1D4ED8] font-semibold">
+                  <span>Manage</span>
+                  <ArrowRight size={13} />
+                </span>
               </div>
             </div>
           ))}

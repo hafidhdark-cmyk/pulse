@@ -1,189 +1,200 @@
 import React, { useState } from 'react';
 import { useWallet } from '../../context/WalletContext';
+import { useAuth } from '../../context/AuthContext';
 import { formatNaira, formatDate } from '../../utils/formatters';
-import PulseLogo from '../common/PulseLogo';
 import Badge from '../common/Badge';
 import ProgressBar from '../common/ProgressBar';
-import { 
-  Wallet, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  PiggyBank, 
-  Eye, 
-  EyeOff, 
-  Plus, 
-  Send, 
-  KeyRound, 
-  Sparkles,
-  TrendingUp,
-  ShieldCheck,
-  Zap,
-  ArrowRight
+import vaultIllustration from '../../assets/group-vault-illustration.jpg';
+import collabHeroImg from '../../assets/collab-savings-hero.jpg';
+import {
+  ArrowUpRight,
+  ArrowDownLeft,
+  Eye,
+  EyeOff,
+  Plus,
+  Send,
+  KeyRound,
+  ArrowRight,
+  Users,
+  User,
+  Receipt
 } from 'lucide-react';
 
-export default function WalletDashboardView({ 
-  onOpenFund, 
-  onOpenP2P, 
-  onOpenCreatePlan, 
+export default function WalletDashboardView({
+  onOpenFund,
+  onOpenP2P,
+  onOpenCreatePlan,
   onOpenJoinPlan,
   onSelectPlan,
   plans = []
 }) {
+  const { user } = useAuth();
   const { balance, totalSaved, transactions } = useWallet();
   const [showBalance, setShowBalance] = useState(true);
   const [filterType, setFilterType] = useState('ALL');
   const [planFilter, setPlanFilter] = useState('ALL');
 
-  const filteredTransactions = (transactions || []).filter(txn => {
-    if (filterType !== 'ALL' && txn.type !== filterType) return false;
-    return true;
+  const filteredTransactions = (transactions || []).filter((txn) => {
+    if (filterType === 'ALL') return true;
+    if (filterType === 'WALLET_FUND') {
+      return txn.type === 'WALLET_FUND' || txn.type === 'FUND';
+    }
+    return txn.type === filterType;
   });
 
-  const filteredPlans = (plans || []).filter(p => {
+  const filteredPlans = (plans || []).filter((p) => {
     if (planFilter === 'ALL') return true;
     return p.type === planFilter;
   });
 
-  return (
-    <div className="space-y-6">
-      {/* Top Row: Brand Hero Gradient Card (8 cols) + Smart Insights / Quick Stats (4 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Brand Gradient Wallet Hero Card (8 cols on desktop) */}
-        <div className="lg:col-span-8 relative overflow-hidden bg-brand-hero text-white rounded-2xl p-6 sm:p-8 shadow-hero flex flex-col justify-between">
-          {/* Concentric Radar/Pulse Rings Motif */}
-          <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full border border-white/[0.08] pointer-events-none" />
-          <div className="absolute -right-10 -top-10 w-60 h-60 rounded-full border border-white/[0.08] pointer-events-none" />
-          <div className="absolute -right-0 -top-0 w-40 h-40 rounded-full border border-white/[0.08] pointer-events-none" />
-          
-          {/* ECG Pulse Waveform Watermark */}
-          <div className="absolute right-0 bottom-4 w-72 opacity-15 pointer-events-none">
-            <svg viewBox="0 0 500 150" fill="none" stroke="currentColor" strokeWidth="3" className="w-full text-white">
-              <path d="M0,75 L120,75 L140,20 L160,130 L180,60 L200,90 L220,75 L500,75" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+  const groupPlansCount = (plans || []).filter((p) => p.type === 'GROUP').length;
+  const personalPlansCount = (plans || []).filter((p) => p.type === 'PERSONAL').length;
 
+  return (
+    <div className="space-y-5">
+      {/* Top Row: Aligned 7-Col / 5-Col Grid with Equalized Heights */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        {/* Left 7 Cols: Primary Wallet Card */}
+        <div className="lg:col-span-7 bg-[#0F172A] text-white border border-slate-800 rounded-xl p-5 sm:p-6 flex flex-col justify-between h-full">
           <div>
-            {/* Top Row: White Pill Logo on Gradient + Balance Toggle */}
-            <div className="flex items-center justify-between gap-4 mb-6 relative z-10">
-              <PulseLogo variant="pill" size="sm" showWordmark={true} />
-              
+            <div className="flex items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider bg-white/15 px-3 py-1 rounded-full backdrop-blur-sm">
-                  Active Wallet (NGN)
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  Available Balance
                 </span>
-                <button
-                  onClick={() => setShowBalance(!showBalance)}
-                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition text-white"
-                  title={showBalance ? "Hide balance" : "Show balance"}
-                >
-                  {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+                <span className="text-[11px] font-mono text-slate-300 bg-slate-800 border border-slate-700 px-2 py-0.5 rounded">
+                  NGN ₦
+                </span>
               </div>
+
+              <button
+                onClick={() => setShowBalance(!showBalance)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition text-slate-300"
+                title={showBalance ? 'Hide balance' : 'Show balance'}
+              >
+                {showBalance ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
             </div>
 
-            {/* Balance Numbers */}
-            <div className="relative z-10 mb-6">
-              <span className="text-xs text-blue-100 font-medium block mb-1">Available Spendable Balance</span>
-              <h2 className="text-3xl sm:text-5xl font-extrabold font-mono tracking-tight tabular-nums text-white">
+            <div className="mb-6">
+              <h2 className="text-3xl sm:text-4xl font-bold font-mono tracking-tight tabular-nums text-white">
                 {showBalance ? formatNaira(balance, true) : '₦ ••••••••'}
               </h2>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-400">
+                <span>
+                  Account: <strong className="text-slate-200 font-semibold">@{user?.username}</strong>
+                </span>
+                <span>•</span>
+                <span>Instant P2P &amp; Group Vault Funding Ready</span>
+              </div>
             </div>
           </div>
 
-          {/* 4 Quick Actions Row */}
-          <div className="relative z-10 pt-4 border-t border-white/15 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="pt-4 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <button
               onClick={onOpenFund}
-              className="flex items-center justify-center gap-2 h-11 px-3 bg-white hover:bg-blue-50 text-[#1D4ED8] font-bold text-xs rounded-xl shadow-sm transition group"
+              className="flex items-center justify-center gap-1.5 h-10 px-3 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-semibold text-xs rounded-lg transition"
             >
-              <Plus size={16} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
+              <Plus size={15} strokeWidth={2.5} />
               <span>Fund Wallet</span>
             </button>
 
             <button
               onClick={onOpenP2P}
-              className="flex items-center justify-center gap-2 h-11 px-3 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/20 backdrop-blur-sm transition"
+              className="flex items-center justify-center gap-1.5 h-10 px-3 bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs rounded-lg border border-slate-700 transition"
             >
-              <Send size={15} />
-              <span>Send P2P</span>
+              <Send size={14} />
+              <span>Send Money</span>
             </button>
 
             <button
               onClick={onOpenCreatePlan}
-              className="flex items-center justify-center gap-2 h-11 px-3 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/20 backdrop-blur-sm transition"
+              className="flex items-center justify-center gap-1.5 h-10 px-3 bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs rounded-lg border border-slate-700 transition"
             >
-              <Plus size={15} />
+              <Plus size={14} />
               <span>New Plan</span>
             </button>
 
             <button
               onClick={onOpenJoinPlan}
-              className="flex items-center justify-center gap-2 h-11 px-3 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/20 backdrop-blur-sm transition"
+              className="flex items-center justify-center gap-1.5 h-10 px-3 bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs rounded-lg border border-slate-700 transition"
             >
-              <KeyRound size={15} />
-              <span>Join Code</span>
+              <KeyRound size={14} />
+              <span>Join Group</span>
             </button>
           </div>
         </div>
 
-        {/* Quick Stats / Smart Insights Card (4 cols on desktop) */}
-        <div className="lg:col-span-4 bg-white border border-[#DCE7F9] rounded-2xl p-6 shadow-card flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold text-[#52627A] uppercase tracking-wider flex items-center gap-1.5">
-                <PiggyBank size={16} className="text-[#0EA5E9]" />
-                <span>Savings Vaults</span>
-              </span>
-              <Badge variant="cyan">Multiplayer</Badge>
-            </div>
-
-            <span className="text-xs text-[#64748B] block">Total Saved Across Plans</span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] font-mono tabular-nums mt-1">
-              {showBalance ? formatNaira(totalSaved) : '₦ ••••••••'}
-            </h3>
-
-            {/* Smart Pace Pill */}
-            <div className="mt-4 p-3.5 bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl flex items-start gap-2.5">
-              <Zap size={18} className="text-[#1D4ED8] shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold text-[#1D4ED8]">Smart Pace Active</p>
-                <p className="text-[11px] text-[#52627A] mt-0.5 leading-snug">
-                  You are contributing regularly. Continue saving daily or weekly to hit targets on time.
-                </p>
+        {/* Right 5 Cols: Total Saved & Collaborative Vaults Summary Card */}
+        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 flex flex-col justify-between h-full">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Total Saved
+                </span>
+                <Badge variant="primary">{plans.length} Active</Badge>
               </div>
+
+              <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums">
+                {showBalance ? formatNaira(totalSaved, true) : '₦ ••••••••'}
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Combined balance across personal &amp; group plans
+              </p>
             </div>
+
+            <img
+              src={vaultIllustration}
+              alt="Collaborative savings vault"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-200 shrink-0"
+            />
           </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-[#52627A]">
-            <span className="flex items-center gap-1 text-[#15803D] font-semibold">
-              <span className="w-2 h-2 rounded-full bg-[#15803D] animate-pulse" />
-              Real-time Sync Active
-            </span>
-            <span className="font-mono font-semibold text-[#0F172A]">Nobus Cloud</span>
+          <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3 text-xs">
+            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+              <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                <Users size={14} className="text-[#1D4ED8]" />
+                <span>Group Pools</span>
+              </span>
+              <span className="font-mono font-bold text-slate-900 tabular-nums">
+                {groupPlansCount}
+              </span>
+            </div>
+            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+              <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                <User size={14} className="text-slate-700" />
+                <span>Personal</span>
+              </span>
+              <span className="font-mono font-bold text-slate-900 tabular-nums">
+                {personalPlansCount}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Body: 7-Col Active Savings Plans Grid + 5-Col Transaction Ledger */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* 7-Col Active Savings Plans Grid */}
-        <div className="lg:col-span-7 bg-white border border-[#DCE7F9] rounded-2xl p-6 shadow-card">
-          <div className="flex items-center justify-between mb-4">
+      {/* Bottom Row: Aligned 7-Col / 5-Col Grid with Equalized Heights */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        {/* Left 7 Cols: Active Savings Plans Card */}
+        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col h-full">
+          <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-base font-bold text-[#0F172A]">Active Savings Goals</h3>
-              <p className="text-xs text-[#52627A]">Personal targets & multiplayer group vaults</p>
+              <h3 className="text-sm font-bold text-slate-900">Savings Plans</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Shared group pools &amp; personal milestones
+              </p>
             </div>
 
-            {/* Filter pills */}
-            <div className="flex gap-1.5 p-1 bg-[#F4F8FF] rounded-xl border border-[#DCE7F9]">
-              {['ALL', 'GROUP', 'PERSONAL'].map(type => (
+            <div className="flex gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200">
+              {['ALL', 'GROUP', 'PERSONAL'].map((type) => (
                 <button
                   key={type}
                   onClick={() => setPlanFilter(type)}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition ${
                     planFilter === type
-                      ? 'bg-white text-[#1D4ED8] shadow-sm'
-                      : 'text-[#64748B] hover:text-[#0F172A]'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   {type === 'ALL' ? 'All' : type === 'GROUP' ? 'Groups' : 'Personal'}
@@ -192,128 +203,205 @@ export default function WalletDashboardView({
             </div>
           </div>
 
-          {filteredPlans.length === 0 ? (
-            <div className="py-12 text-center text-xs text-[#64748B]">
-              No plans match this filter. Create one to begin saving!
-            </div>
-          ) : (
-            <div className="space-y-3.5">
-              {filteredPlans.map(plan => (
-                <div
-                  key={plan.id}
-                  onClick={() => onSelectPlan(plan.id)}
-                  className="group p-4 rounded-xl border border-[#DCE7F9] hover:border-[#1D4ED8]/50 hover:bg-[#F8FAFF] transition cursor-pointer flex flex-col justify-between"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-[#0F172A] group-hover:text-[#1D4ED8] transition">
-                          {plan.title}
-                        </span>
-                        <Badge variant={plan.type === 'GROUP' ? 'cyan' : 'default'}>
-                          {plan.type === 'GROUP' ? 'GROUP POOL' : 'PERSONAL'}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-[#64748B] mt-0.5 line-clamp-1">{plan.description}</p>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span className="text-xs font-mono font-bold text-[#1D4ED8] tabular-nums">
-                        {formatNaira(plan.currentAmount)}
-                      </span>
-                      <span className="text-[10px] text-[#64748B] block">
-                        of {formatNaira(plan.targetAmount)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <ProgressBar
-                    current={plan.currentAmount}
-                    target={plan.targetAmount}
-                    percent={plan.progressPercent}
-                    height="h-2"
+          <div className="p-5 flex-1 flex flex-col justify-center">
+            {filteredPlans.length === 0 ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                <div className="sm:col-span-5">
+                  <img
+                    src={collabHeroImg}
+                    alt="Collaborative group savings"
+                    className="w-full h-36 sm:h-40 object-cover rounded-lg border border-slate-200"
                   />
-
-                  <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-[#64748B]">
-                    <div className="flex items-center gap-2 font-mono">
-                      {plan.inviteCode && (
-                        <span className="bg-[#EFF6FF] text-[#1D4ED8] px-2 py-0.5 rounded font-bold border border-[#BFDBFE]">
-                          {plan.inviteCode}
-                        </span>
-                      )}
-                      <span>{plan.frequency}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[#1D4ED8] font-bold group-hover:translate-x-0.5 transition-transform">
-                      <span>Open Vault</span>
-                      <ArrowRight size={13} />
-                    </div>
+                </div>
+                <div className="sm:col-span-7 space-y-2.5 text-left">
+                  <Badge variant="primary">Collaborative Savings</Badge>
+                  <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                    Save toward shared goals with your circle
+                  </h4>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Launch a group pool with a unique invite code, track member contributions on a live leaderboard, or set a personal target.
+                  </p>
+                  <div className="pt-1 flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={onOpenCreatePlan}
+                      className="h-9 px-4 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-semibold rounded-lg transition"
+                    >
+                      Create Savings Plan
+                    </button>
+                    <button
+                      onClick={onOpenJoinPlan}
+                      className="h-9 px-4 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-semibold rounded-lg transition"
+                    >
+                      Join with Code
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredPlans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    onClick={() => onSelectPlan(plan.id)}
+                    className="group p-4 rounded-lg border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/60 transition cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-[#1D4ED8] transition truncate">
+                            {plan.title}
+                          </span>
+                          <Badge variant={plan.type === 'GROUP' ? 'primary' : 'default'}>
+                            {plan.type === 'GROUP' ? 'Group' : 'Personal'}
+                          </Badge>
+                        </div>
+                        {plan.description && (
+                          <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+                            {plan.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="text-sm font-mono font-bold text-slate-900 tabular-nums block">
+                          {formatNaira(plan.currentAmount)}
+                        </span>
+                        <span className="text-[11px] text-slate-500 font-mono tabular-nums">
+                          of {formatNaira(plan.targetAmount)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <ProgressBar
+                      current={plan.currentAmount}
+                      target={plan.targetAmount}
+                      percent={plan.progressPercent ?? plan.progressPercentage}
+                      height="h-2"
+                    />
+
+                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {plan.type === 'GROUP' && plan.inviteCode && (
+                          <span className="font-mono text-[11px] bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-200 font-semibold">
+                            {plan.inviteCode}
+                          </span>
+                        )}
+                        <span className="inline-flex items-center gap-1">
+                          {plan.type === 'GROUP' ? <Users size={12} /> : <User size={12} />}
+                          {plan.memberCount || 1} {(plan.memberCount || 1) === 1 ? 'member' : 'members'}
+                        </span>
+                        <span>•</span>
+                        <span className="capitalize">{(plan.frequency || 'FLEXIBLE').toLowerCase()}</span>
+                      </div>
+
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#1D4ED8]">
+                        <span>View</span>
+                        <ArrowRight size={13} />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* 5-Col Wallet Transaction Ledger Feed */}
-        <div className="lg:col-span-5 bg-white border border-[#DCE7F9] rounded-2xl p-6 shadow-card">
-          <div className="flex items-center justify-between mb-4">
+        {/* Right 5 Cols: Transaction Ledger Card */}
+        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col h-full">
+          <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-2">
             <div>
-              <h3 className="text-base font-bold text-[#0F172A]">Transaction Ledger</h3>
-              <p className="text-xs text-[#52627A]">Wallet credits and debits</p>
+              <h3 className="text-sm font-bold text-slate-900">Transactions</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Recent account activity</p>
             </div>
 
-            {/* Filter */}
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="text-xs bg-[#F4F8FF] border border-[#DCE7F9] rounded-lg px-2.5 py-1 text-[#52627A] font-semibold focus:outline-none"
+              className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-medium focus:outline-none focus:border-[#1D4ED8]"
             >
-              <option value="ALL">All Activity</option>
-              <option value="FUND">Fundings</option>
-              <option value="P2P_SEND">Sent</option>
-              <option value="P2P_RECEIVE">Received</option>
+              <option value="ALL">All Types</option>
+              <option value="WALLET_FUND">Deposits</option>
+              <option value="P2P_SEND">Transfers Sent</option>
+              <option value="P2P_RECEIVE">Transfers Received</option>
               <option value="SAVINGS_CONTRIBUTION">Savings</option>
             </select>
           </div>
 
-          {filteredTransactions.length === 0 ? (
-            <div className="py-12 text-center text-xs text-[#64748B]">
-              No transactions recorded yet.
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100 max-h-[480px] overflow-y-auto pr-1">
-              {filteredTransactions.map(txn => {
-                const isCredit = txn.direction === 'CREDIT';
-                return (
-                  <div key={txn.id} className="py-3 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                        isCredit ? 'bg-[#DCFCE7] text-[#15803D]' : 'bg-[#FEE2E2] text-[#B91C1C]'
-                      }`}>
-                        {isCredit ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-[#0F172A] truncate">
-                          {txn.description}
-                        </p>
-                        <p className="text-[10px] text-[#64748B] font-mono mt-0.5">
-                          {formatDate(txn.createdAt)} • {txn.reference}
-                        </p>
-                      </div>
-                    </div>
+          <div className="flex-1 flex flex-col justify-center">
+            {filteredTransactions.length === 0 ? (
+              <div className="p-6 text-center space-y-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center mx-auto">
+                  <Receipt size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900">No transactions yet</p>
+                  <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
+                    Fund your wallet or send an instant transfer to record your first ledger entry.
+                  </p>
+                </div>
+                <div className="pt-1 flex items-center justify-center gap-2">
+                  <button
+                    onClick={onOpenFund}
+                    className="h-9 px-3.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition"
+                  >
+                    Fund Wallet
+                  </button>
+                  <button
+                    onClick={onOpenP2P}
+                    className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition"
+                  >
+                    Send Money
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto">
+                {filteredTransactions.map((txn) => {
+                  const isCredit =
+                    txn.direction === 'CREDIT' ||
+                    ['WALLET_FUND', 'FUND', 'P2P_RECEIVE'].includes(txn.type);
 
-                    <div className="text-right shrink-0">
-                      <span className={`text-xs font-bold font-mono tabular-nums ${
-                        isCredit ? 'text-[#15803D]' : 'text-[#0F172A]'
-                      }`}>
-                        {isCredit ? '+' : '-'}{formatNaira(txn.amount)}
-                      </span>
+                  return (
+                    <div
+                      key={txn.id}
+                      className="px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-slate-50/50 transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
+                            isCredit
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                              : 'bg-slate-100 border-slate-200 text-slate-700'
+                          }`}
+                        >
+                          {isCredit ? <ArrowDownLeft size={15} /> : <ArrowUpRight size={15} />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-900 truncate">
+                            {txn.description}
+                          </p>
+                          <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">
+                            {formatDate(txn.createdAt)} • {txn.reference}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span
+                          className={`text-xs font-bold font-mono tabular-nums ${
+                            isCredit ? 'text-emerald-700' : 'text-slate-900'
+                          }`}
+                        >
+                          {isCredit ? '+' : '-'}
+                          {formatNaira(txn.amount)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

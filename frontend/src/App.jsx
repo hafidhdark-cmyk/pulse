@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import { api } from './api/client';
 import AuthView from './components/views/AuthView';
@@ -17,11 +17,10 @@ import Toast from './components/common/Toast';
 
 export default function App() {
   const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState('wallet'); // 'wallet', 'savings'
+  const [activeTab, setActiveTab] = useState('wallet');
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [plans, setPlans] = useState([]);
 
-  // Modals state
   const [fundModalOpen, setFundModalOpen] = useState(false);
   const [p2pModalOpen, setP2pModalOpen] = useState(false);
   const [createPlanModalOpen, setCreatePlanModalOpen] = useState(false);
@@ -30,26 +29,29 @@ export default function App() {
   const [splitPlanId, setSplitPlanId] = useState(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const fetchPlans = useCallback(async () => {
+  const fetchPlans = React.useCallback(async () => {
     if (!user) return;
     try {
       const res = await api.savings.getPlans();
       setPlans(res.plans || []);
     } catch (err) {
-      console.error("Failed to load plans:", err);
+      console.error('Failed to load plans:', err);
     }
   }, [user]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (user) {
       fetchPlans();
+    } else {
+      setPlans([]);
+      setSelectedPlanId(null);
     }
   }, [user, fetchPlans]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F4F8FF] flex items-center justify-center">
-        <div className="w-10 h-10 border-3 border-[#1D4ED8] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#1D4ED8] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -64,8 +66,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F8FF] text-[#0F172A] flex flex-col pb-16 lg:pb-0">
-      {/* Sticky Top Navbar */}
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col pb-20 lg:pb-8">
       <Navbar
         activeTab={activeTab}
         setActiveTab={(tab) => {
@@ -77,8 +78,7 @@ export default function App() {
         onOpenNotifications={() => setNotificationsOpen(true)}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7">
         {selectedPlanId ? (
           <SavingsPlanDetailView
             planId={selectedPlanId}
@@ -108,7 +108,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Global Modals */}
       <FundWalletModal
         isOpen={fundModalOpen}
         onClose={() => {

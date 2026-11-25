@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import PulseLogo from '../common/PulseLogo';
-import { ShieldCheck, Users, Zap, ArrowRight } from 'lucide-react';
+import collabHeroImg from '../../assets/collab-savings-hero.jpg';
+import { ArrowRight, ShieldCheck, Users, ArrowRightLeft } from 'lucide-react';
 
 export default function AuthView() {
   const { login, register } = useAuth();
   const { showToast } = useNotifications();
   const [isRegister, setIsRegister] = useState(false);
-  const [emailOrUsername, setEmailOrUsername] = useState('hafidh');
-  const [password, setPassword] = useState('password123');
-  const [name, setName] = useState('Hafidh Dark');
-  const [username, setUsername] = useState('hafidh');
-  const [email, setEmail] = useState('hafidh@pulse.app');
+  const [emailOrUsername, setEmailOrUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -21,94 +22,100 @@ export default function AuthView() {
     try {
       if (isRegister) {
         await register({ name, username, email, password });
-        showToast("Welcome to Pulse! Account created.", "success");
+        showToast('Account created successfully.', 'success');
       } else {
         await login(emailOrUsername, password);
-        showToast("Signed in successfully!", "success");
+        showToast('Signed in.', 'success');
       }
     } catch (err) {
-      showToast(err.message || "Authentication failed", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickDemo = async () => {
-    setLoading(true);
-    try {
-      await login('hafidh', 'password123');
-      showToast("Signed in as Demo User @hafidh!", "success");
-    } catch (err) {
-      showToast(err.message, "error");
+      showToast(err.message || 'Authentication failed', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F8FF] flex flex-col justify-center py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl w-full mx-auto bg-white border border-[#DCE7F9] rounded-3xl shadow-elevation overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
-        
-        {/* LEFT COLUMN: Blue Gradient Brand Hero on Desktop */}
-        <div className="lg:col-span-6 bg-brand-hero p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">
-          {/* Radar Rings Motif */}
-          <div className="absolute -right-24 -top-24 w-96 h-96 rounded-full border border-white/[0.08] pointer-events-none" />
-          <div className="absolute -right-12 -top-12 w-72 h-72 rounded-full border border-white/[0.08] pointer-events-none" />
-          
-          {/* ECG pulse graphic watermark */}
-          <div className="absolute right-0 bottom-8 w-80 opacity-20 pointer-events-none">
-            <svg viewBox="0 0 500 150" fill="none" stroke="currentColor" strokeWidth="3" className="w-full text-white">
-              <path d="M0,75 L120,75 L140,20 L160,130 L180,60 L200,90 L220,75 L500,75" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-
-          <div className="relative z-10">
-            {/* White rounded pill logo */}
-            <div className="mb-8">
-              <PulseLogo variant="pill" size="default" showWordmark={true} />
-            </div>
-
-            <div className="space-y-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-semibold text-blue-100 uppercase tracking-wider">
-                <Zap size={13} />
-                Multiplayer Social Fintech
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-center py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl w-full mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+        {/* Left Panel: Brand Story & Collaborative Savings Photography */}
+        <div className="lg:col-span-6 bg-[#0F172A] p-6 sm:p-9 text-white flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-6">
+              <PulseLogo variant="pill" size="default" />
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-300 bg-slate-800/90 border border-slate-700 px-3 py-1 rounded-full">
+                Collaborative Finance
               </span>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
-                Save Together. <br />Grow Faster.
-              </h1>
-              <p className="text-sm text-blue-100 max-w-sm leading-relaxed">
-                The collaborative group savings and P2P wallet built for friends, squads, and communities.
-              </p>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white leading-snug">
+              Personal &amp; group savings, built for clarity.
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
+              Pool funds with friends and teammates, track every contribution transparently, and settle instant transfers from one NGN wallet.
+            </p>
+
+            {/* Editorial Collaborative Savings Visual Card */}
+            <div className="mt-5 relative rounded-xl overflow-hidden border border-slate-700/80 bg-slate-900">
+              <img
+                src={collabHeroImg}
+                alt="Friends collaborating on a shared group savings goal"
+                className="w-full h-48 sm:h-56 object-cover object-center"
+              />
+              <div className="p-3.5 bg-slate-900/95 border-t border-slate-800 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <div>
+                    <p className="text-xs font-semibold text-white">Shared Group Pools</p>
+                    <p className="text-[11px] text-slate-400">
+                      Real-time member ledger, chat &amp; bill splits
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[11px] font-mono font-semibold text-blue-300 bg-blue-950/80 border border-blue-800/60 px-2.5 py-1 rounded-md shrink-0">
+                  NGN ₦
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Social Proof Pills */}
-          <div className="relative z-10 pt-8 mt-8 border-t border-white/15 grid grid-cols-3 gap-2.5 text-center text-xs">
-            <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm">
-              <span className="block font-bold font-mono text-sm">NGN ₦</span>
-              <span className="text-[10px] text-blue-100">Zero Fees</span>
+          <div className="mt-6 pt-5 border-t border-slate-800/90 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-300">
+            <div className="flex items-start gap-2">
+              <Users size={15} className="text-blue-400 shrink-0 mt-0.5" />
+              <span>Group vaults with invite codes</span>
             </div>
-            <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm">
-              <span className="block font-bold text-sm">Group Vaults</span>
-              <span className="text-[10px] text-blue-100">Live Chat</span>
+            <div className="flex items-start gap-2">
+              <ArrowRightLeft size={15} className="text-blue-400 shrink-0 mt-0.5" />
+              <span>Instant P2P &amp; 1-click splits</span>
             </div>
-            <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm">
-              <span className="block font-bold text-sm">1-Click</span>
-              <span className="text-[10px] text-blue-100">Bill Splits</span>
+            <div className="flex items-start gap-2">
+              <ShieldCheck size={15} className="text-blue-400 shrink-0 mt-0.5" />
+              <span>Live contribution tracking</span>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Clean Auth Card */}
-        <div className="lg:col-span-6 p-8 sm:p-12 flex flex-col justify-center">
+        {/* Right Panel: Auth Form */}
+        <div className="lg:col-span-6 p-6 sm:p-10 flex flex-col justify-center">
           <div className="max-w-sm w-full mx-auto">
-            {/* Tab Switcher */}
-            <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#F4F8FF] rounded-xl border border-[#DCE7F9] mb-6">
+            <div className="mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                {isRegister ? 'Create your Pulse account' : 'Sign in to your account'}
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                {isRegister
+                  ? 'Set up your profile and NGN wallet to start saving together.'
+                  : 'Enter your username or email to access your wallet and groups.'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200 mb-6">
               <button
                 type="button"
                 onClick={() => setIsRegister(false)}
-                className={`py-2 text-xs font-bold rounded-lg transition ${
-                  !isRegister ? 'bg-white text-[#1D4ED8] shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'
+                className={`py-2 text-xs font-semibold rounded-md transition ${
+                  !isRegister
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Sign In
@@ -116,8 +123,10 @@ export default function AuthView() {
               <button
                 type="button"
                 onClick={() => setIsRegister(true)}
-                className={`py-2 text-xs font-bold rounded-lg transition ${
-                  isRegister ? 'bg-white text-[#1D4ED8] shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'
+                className={`py-2 text-xs font-semibold rounded-md transition ${
+                  isRegister
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Create Account
@@ -128,93 +137,100 @@ export default function AuthView() {
               {isRegister ? (
                 <>
                   <div>
-                    <label className="block text-xs font-semibold text-[#475569] mb-1">Full Name</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Full Name
+                    </label>
                     <input
                       type="text"
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#DCE7F9] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#1D4ED8] transition"
-                      placeholder="Hafidh Dark"
+                      className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
+                      placeholder="Enter your full name"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#475569] mb-1">Unique Username</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Username
+                    </label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B] font-bold text-sm">@</span>
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">
+                        @
+                      </span>
                       <input
                         type="text"
                         required
                         value={username}
-                        onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                        className="w-full h-11 pl-8 pr-3.5 bg-[#F8FAFC] border border-[#DCE7F9] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#1D4ED8] transition"
-                        placeholder="hafidh"
+                        onChange={(e) =>
+                          setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))
+                        }
+                        className="w-full h-11 pl-8 pr-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
+                        placeholder="username"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#475569] mb-1">Email Address</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Email Address
+                    </label>
                     <input
                       type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#DCE7F9] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#1D4ED8] transition"
-                      placeholder="hafidh@pulse.app"
+                      className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
+                      placeholder="name@example.com"
                     />
                   </div>
                 </>
               ) : (
                 <div>
-                  <label className="block text-xs font-semibold text-[#475569] mb-1">Email or Username</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Email or Username
+                  </label>
                   <input
                     type="text"
                     required
                     value={emailOrUsername}
                     onChange={(e) => setEmailOrUsername(e.target.value)}
-                    className="w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#DCE7F9] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#1D4ED8] transition"
-                    placeholder="hafidh or hafidh@pulse.app"
+                    className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
+                    placeholder="username or email"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-[#475569] mb-1">Password</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Password
+                </label>
                 <input
                   type="password"
                   required
+                  minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#DCE7F9] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#1D4ED8] transition"
-                  placeholder="••••••••••••"
+                  className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
+                  placeholder="Minimum 6 characters"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 flex items-center justify-center gap-2 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-sm rounded-xl transition shadow-md shadow-blue-500/20 disabled:opacity-50 mt-2"
+                className="w-full h-11 flex items-center justify-center gap-2 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-semibold text-sm rounded-lg transition disabled:opacity-50 mt-2"
               >
-                <span>{loading ? "Authenticating..." : isRegister ? "Create Wallet & Account" : "Sign In to Pulse"}</span>
-                <ArrowRight size={16} />
+                <span>
+                  {loading
+                    ? 'Please wait...'
+                    : isRegister
+                    ? 'Create Account'
+                    : 'Sign In'}
+                </span>
+                <ArrowRight size={15} />
               </button>
             </form>
-
-            {/* Quick Demo Shortcut */}
-            <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-              <button
-                type="button"
-                onClick={handleQuickDemo}
-                disabled={loading}
-                className="inline-flex items-center gap-1.5 text-xs text-[#1D4ED8] hover:text-[#1E40AF] font-bold"
-              >
-                <Zap size={14} />
-                <span>1-Click Sign In as Demo User (@hafidh)</span>
-              </button>
-            </div>
           </div>
         </div>
-
       </div>
     </div>
   );

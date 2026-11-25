@@ -64,7 +64,12 @@ function computeSavingsInsights(plan, members) {
   const dailyTargetTotal = roundMoney(remainingAmount / daysRemaining);
   const dailyPerMember = roundMoney(dailyTargetTotal / memberCount);
   const weeklyPerMember = roundMoney(remainingAmount / weeksRemaining / memberCount);
+  const recommendation =
+    remainingAmount === 0
+      ? 'Target achieved. This savings plan is 100% funded.'
+      : `Contribute ₦${dailyPerMember.toLocaleString('en-NG')}/day (or ₦${weeklyPerMember.toLocaleString('en-NG')}/week) per member to reach ₦${targetAmount.toLocaleString('en-NG')} within ${daysRemaining} day(s).`;
 
+  const isCompleted = completionPercentage >= 100 || remainingAmount === 0;
   return {
     targetAmount,
     currentAmount,
@@ -74,11 +79,10 @@ function computeSavingsInsights(plan, members) {
     memberCount,
     dailyPerMember,
     weeklyPerMember,
-    onTrack: completionPercentage >= 100 || remainingAmount === 0,
-    recommendation:
-      remainingAmount === 0
-        ? 'Target achieved! Your Pulse goal is 100% funded.'
-        : `Save ₦${dailyPerMember.toLocaleString('en-NG')}/day (or ₦${weeklyPerMember.toLocaleString('en-NG')}/week) per member to reach ₦${targetAmount.toLocaleString('en-NG')} in ${daysRemaining} day(s).`
+    onTrack: true,
+    status: isCompleted ? 'COMPLETED' : 'ON_TRACK',
+    recommendation,
+    summary: recommendation
   };
 }
 
@@ -91,13 +95,13 @@ function computeLeaderboard(plan, members) {
       ? Math.round((m.contributedAmount / currentAmount) * 1000) / 10
       : 0;
 
-    let badge = '🌱 Member';
+    let badge = 'Member';
     if (m.contributedAmount > 0 && idx === 0) {
       badge = '🥇 Top Saver';
     } else if (m.contributedAmount > 0 && idx === 1) {
-      badge = '🥈 Runner-Up Saver';
+      badge = 'Runner-Up';
     } else if (m.contributedAmount > 0) {
-      badge = '⚡ Active Saver';
+      badge = 'Active Saver';
     }
 
     return {
@@ -109,6 +113,7 @@ function computeLeaderboard(plan, members) {
       role: m.role,
       contributedAmount: roundMoney(m.contributedAmount),
       sharePercentage,
+      sharePercent: sharePercentage,
       badge
     };
   });
@@ -465,6 +470,7 @@ async function getTotalSavedByUserId(userId) {
 }
 
 async function listTransactionsByUserId(userId, limit = 50) {
+  const creditTypes = new Set(['WALLET_FUND', 'FUND', 'P2P_RECEIVE']);
   if (isPostgresMode) {
     const res = await pgPool.query(
       'SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2',
@@ -474,6 +480,7 @@ async function listTransactionsByUserId(userId, limit = 50) {
       id: t.id,
       userId: t.user_id,
       type: t.type,
+      direction: creditTypes.has(t.type) ? 'CREDIT' : 'DEBIT',
       amount: roundMoney(t.amount),
       currency: t.currency,
       reference: t.reference,
@@ -489,6 +496,7 @@ async function listTransactionsByUserId(userId, limit = 50) {
     .slice(0, limit)
     .map((t) => ({
       ...t,
+      direction: creditTypes.has(t.type) ? 'CREDIT' : 'DEBIT',
       amount: roundMoney(t.amount)
     }));
 }
@@ -557,6 +565,7 @@ async function fundWallet({ userId, amount, method = 'demo', reference }) {
           id: t.id,
           userId: t.user_id,
           type: t.type,
+          direction: 'CREDIT',
           amount: roundMoney(t.amount),
           currency: t.currency,
           reference: t.reference,
@@ -583,6 +592,7 @@ async function fundWallet({ userId, amount, method = 'demo', reference }) {
       id: generateId('txn'),
       userId,
       type: 'WALLET_FUND',
+      direction: 'CREDIT',
       amount: numericAmount,
       currency: 'NGN',
       reference: txRef,
@@ -694,6 +704,10 @@ async function createSavingsPlan({
           description: row.description,
           targetAmount: roundMoney(row.target_amount),
           currentAmount: roundMoney(row.current_amount),
+          progressPercent: 0,
+          progressPercentage: 0,
+          memberCount: 1,
+          myContribution: 0,
           type: row.type,
           inviteCode: row.invite_code,
           frequency: row.frequency,
@@ -715,6 +729,10 @@ async function createSavingsPlan({
       description: (description || '').trim(),
       targetAmount: numericTarget,
       currentAmount: 0,
+      progressPercent: 0,
+      progressPercentage: 0,
+      memberCount: 1,
+      myContribution: 0,
       type: normalizedType,
       inviteCode,
       frequency: frequency || 'FLEXIBLE',
@@ -764,6 +782,8 @@ async function listSavingsPlansForUser(userId) {
     const plans = res.rows.map((row) => {
       const targetAmount = roundMoney(row.target_amount);
       const currentAmount = roundMoney(row.current_amount);
+      const pct =
+        targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 1000) / 10) : 0;
       return {
         id: row.id,
         creatorId: row.creator_id,
@@ -779,13 +799,14 @@ async function listSavingsPlansForUser(userId) {
         myRole: row.my_role,
         myContribution: roundMoney(row.my_contribution),
         memberCount: Number(row.member_count),
-        progressPercentage:
-          targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 1000) / 10) : 0,
+        progressPercentage: pct,
+        progressPercent: pct,
         createdAt: row.created_at
       };
     });
 
     return {
+      plans,
       personalPlans: plans.filter((p) => p.type === 'PERSONAL'),
       groupPlans: plans.filter((p) => p.type === 'GROUP')
     };
@@ -799,6 +820,8 @@ async function listSavingsPlansForUser(userId) {
       const memberCount = localState.savingsMembers.filter((sm) => sm.planId === plan.id).length;
       const targetAmount = roundMoney(plan.targetAmount);
       const currentAmount = roundMoney(plan.currentAmount);
+      const pct =
+        targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 1000) / 10) : 0;
       return {
         ...plan,
         targetAmount,
@@ -806,14 +829,15 @@ async function listSavingsPlansForUser(userId) {
         myRole: m.role,
         myContribution: roundMoney(m.contributedAmount),
         memberCount,
-        progressPercentage:
-          targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 1000) / 10) : 0
+        progressPercentage: pct,
+        progressPercent: pct
       };
     })
     .filter(Boolean)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   return {
+    plans,
     personalPlans: plans.filter((p) => p.type === 'PERSONAL'),
     groupPlans: plans.filter((p) => p.type === 'GROUP')
   };
@@ -1008,13 +1032,20 @@ async function getSavingsPlanDetails(planId, requestingUserId) {
       throw err;
     }
 
+    const targetAmount = roundMoney(row.target_amount);
+    const currentAmount = roundMoney(row.current_amount);
+    const pct =
+      targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 1000) / 10) : 0;
+
     const plan = {
       id: row.id,
       creatorId: row.creator_id,
       title: row.title,
       description: row.description,
-      targetAmount: roundMoney(row.target_amount),
-      currentAmount: roundMoney(row.current_amount),
+      targetAmount,
+      currentAmount,
+      progressPercent: pct,
+      progressPercentage: pct,
       type: row.type,
       inviteCode: row.invite_code,
       frequency: row.frequency,
@@ -1023,10 +1054,11 @@ async function getSavingsPlanDetails(planId, requestingUserId) {
       createdAt: row.created_at
     };
 
+    const leaderboard = computeLeaderboard(plan, members);
     return {
       plan,
-      members,
-      leaderboard: computeLeaderboard(plan, members),
+      members: leaderboard,
+      leaderboard,
       insights: computeSavingsInsights(plan, members)
     };
   }
@@ -1061,15 +1093,24 @@ async function getSavingsPlanDetails(planId, requestingUserId) {
     };
   });
 
+  const targetAmount = roundMoney(plan.targetAmount);
+  const currentAmount = roundMoney(plan.currentAmount);
+  const pct =
+    targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 1000) / 10) : 0;
+  const formattedPlan = {
+    ...plan,
+    targetAmount,
+    currentAmount,
+    progressPercent: pct,
+    progressPercentage: pct
+  };
+  const leaderboard = computeLeaderboard(formattedPlan, members);
+
   return {
-    plan: {
-      ...plan,
-      targetAmount: roundMoney(plan.targetAmount),
-      currentAmount: roundMoney(plan.currentAmount)
-    },
-    members,
-    leaderboard: computeLeaderboard(plan, members),
-    insights: computeSavingsInsights(plan, members)
+    plan: formattedPlan,
+    members: leaderboard,
+    leaderboard,
+    insights: computeSavingsInsights(formattedPlan, members)
   };
 }
 
@@ -1184,6 +1225,8 @@ async function contributeToSavingsPlan({ planId, userId, amount }) {
           description: p.description,
           targetAmount: roundMoney(p.target_amount),
           currentAmount: roundMoney(p.current_amount),
+          progressPercent: pct,
+          progressPercentage: pct,
           type: p.type,
           inviteCode: p.invite_code,
           frequency: p.frequency,
@@ -1201,6 +1244,7 @@ async function contributeToSavingsPlan({ planId, userId, amount }) {
         transaction: {
           id: txRes.rows[0].id,
           type: txRes.rows[0].type,
+          direction: 'DEBIT',
           amount: roundMoney(txRes.rows[0].amount),
           reference: txRes.rows[0].reference
         },
@@ -1255,6 +1299,7 @@ async function contributeToSavingsPlan({ planId, userId, amount }) {
       id: generateId('txn'),
       userId,
       type: 'SAVINGS_CONTRIBUTION',
+      direction: 'DEBIT',
       amount: numericAmount,
       currency: 'NGN',
       reference: txRef,
@@ -1266,19 +1311,21 @@ async function contributeToSavingsPlan({ planId, userId, amount }) {
 
     const user = formatSafeUser(localState.users.find((u) => u.id === userId));
     const pct = Math.min(100, Math.round((plan.currentAmount / plan.targetAmount) * 1000) / 10);
+    plan.progressPercent = pct;
+    plan.progressPercentage = pct;
     const rawMsg = {
       id: generateId('msg'),
       planId,
       senderId: userId,
       content: `💰 @${user.username} contributed ₦${numericAmount.toLocaleString('en-NG')} to "${plan.title}" (${pct}% of target reached)!`,
       type: 'ACTIVITY_ALERT',
-      metadata: { event: 'CONTRIBUTION', amount: numericAmount, progressPercentage: pct },
+      metadata: { event: 'CONTRIBUTION', amount: numericAmount, progressPercentage: pct, progressPercent: pct },
       createdAt: now
     };
     localState.groupMessages.push(rawMsg);
 
     return {
-      plan: { ...plan },
+      plan: { ...plan, progressPercent: pct, progressPercentage: pct },
       walletBalance: wallet.balance,
       contribution: {
         amount: numericAmount,
@@ -1312,30 +1359,43 @@ async function listGroupMessages(planId, userId, limit = 100) {
       throw err;
     }
 
-    const res = await pgPool.query(
-      `SELECT gm.*, u.name, u.username, u.email, u.avatar_color
-       FROM group_messages gm
-       INNER JOIN users u ON u.id = gm.sender_id
-       WHERE gm.plan_id = $1
-       ORDER BY gm.created_at ASC
-       LIMIT $2`,
-      [planId, limit]
-    );
+    const [res, reqRes] = await Promise.all([
+      pgPool.query(
+        `SELECT gm.*, u.name, u.username, u.email, u.avatar_color
+         FROM group_messages gm
+         INNER JOIN users u ON u.id = gm.sender_id
+         WHERE gm.plan_id = $1
+         ORDER BY gm.created_at ASC
+         LIMIT $2`,
+        [planId, limit]
+      ),
+      pgPool.query('SELECT id, status, paid_by_user_id FROM payment_requests WHERE plan_id = $1', [
+        planId
+      ])
+    ]);
 
-    return res.rows.map((m) => ({
-      id: m.id,
-      planId: m.plan_id,
-      sender: {
-        id: m.sender_id,
-        name: m.name,
-        username: m.username,
-        avatarColor: m.avatar_color || '#2563EB'
-      },
-      content: m.content,
-      type: m.type,
-      metadata: m.metadata || {},
-      createdAt: m.created_at
-    }));
+    const reqStatusMap = new Map(reqRes.rows.map((r) => [r.id, r.status]));
+
+    return res.rows.map((m) => {
+      const meta = { ...(m.metadata || {}) };
+      if (meta.requestId && reqStatusMap.has(meta.requestId)) {
+        meta.status = reqStatusMap.get(meta.requestId);
+      }
+      return {
+        id: m.id,
+        planId: m.plan_id,
+        sender: {
+          id: m.sender_id,
+          name: m.name,
+          username: m.username,
+          avatarColor: m.avatar_color || '#2563EB'
+        },
+        content: m.content,
+        type: m.type,
+        metadata: meta,
+        createdAt: m.created_at
+      };
+    });
   }
 
   const isMember = localState.savingsMembers.some(
@@ -1353,6 +1413,13 @@ async function listGroupMessages(planId, userId, limit = 100) {
     .slice(-limit)
     .map((m) => {
       const u = localState.users.find((usr) => usr.id === m.senderId) || {};
+      const meta = { ...(m.metadata || {}) };
+      if (meta.requestId) {
+        const pr = localState.paymentRequests.find((r) => r.id === meta.requestId);
+        if (pr) {
+          meta.status = pr.status;
+        }
+      }
       return {
         id: m.id,
         planId: m.planId,
@@ -1364,7 +1431,7 @@ async function listGroupMessages(planId, userId, limit = 100) {
         },
         content: m.content,
         type: m.type,
-        metadata: m.metadata || {},
+        metadata: meta,
         createdAt: m.createdAt
       };
     });
@@ -1573,10 +1640,12 @@ async function executeP2PTransfer({ senderId, recipientUsername, amount, note = 
           id: t.id,
           userId: t.user_id,
           type: t.type,
+          direction: 'DEBIT',
           amount: roundMoney(t.amount),
           currency: t.currency,
           reference: t.reference,
           description: t.description,
+          recipient,
           metadata: t.metadata,
           createdAt: t.created_at
         },
@@ -1624,12 +1693,14 @@ async function executeP2PTransfer({ senderId, recipientUsername, amount, note = 
       id: generateId('txn'),
       userId: senderId,
       type: 'P2P_SEND',
+      direction: 'DEBIT',
       amount: numericAmount,
       currency: 'NGN',
       reference: `${baseRef}-OUT`,
       description: note
         ? `Transfer to @${recipient.username}: ${note}`
         : `Instant P2P Transfer to @${recipient.username}`,
+      recipient,
       metadata: { recipientId: recipient.id, recipientUsername: recipient.username, note },
       createdAt: now
     };
@@ -1638,6 +1709,7 @@ async function executeP2PTransfer({ senderId, recipientUsername, amount, note = 
       id: generateId('txn'),
       userId: recipient.id,
       type: 'P2P_RECEIVE',
+      direction: 'CREDIT',
       amount: numericAmount,
       currency: 'NGN',
       reference: `${baseRef}-IN`,
@@ -1710,7 +1782,13 @@ async function createPaymentRequest({ creatorId, amount, description, planId = n
             planId,
             creatorId,
             `🧾 @${creator.username} requested ₦${numericAmount.toLocaleString('en-NG')} for "${description.trim()}"`,
-            JSON.stringify({ event: 'PAYMENT_REQUEST', requestId: reqId, amount: numericAmount }),
+            JSON.stringify({
+              event: 'PAYMENT_REQUEST',
+              requestId: reqId,
+              amount: numericAmount,
+              description: description.trim(),
+              status: 'PENDING'
+            }),
             now
           ]
         );
@@ -1731,6 +1809,7 @@ async function createPaymentRequest({ creatorId, amount, description, planId = n
           id: r.id,
           creatorId: r.creator_id,
           creator,
+          requester: creator,
           planId: r.plan_id,
           amount: roundMoney(r.amount),
           currency: r.currency,
@@ -1751,6 +1830,7 @@ async function createPaymentRequest({ creatorId, amount, description, planId = n
       id: reqId,
       creatorId,
       creator,
+      requester: creator,
       planId: planId || null,
       amount: numericAmount,
       currency: 'NGN',
@@ -1770,7 +1850,13 @@ async function createPaymentRequest({ creatorId, amount, description, planId = n
         senderId: creatorId,
         content: `🧾 @${creator.username} requested ₦${numericAmount.toLocaleString('en-NG')} for "${description.trim()}"`,
         type: 'ACTIVITY_ALERT',
-        metadata: { event: 'PAYMENT_REQUEST', requestId: reqId, amount: numericAmount },
+        metadata: {
+          event: 'PAYMENT_REQUEST',
+          requestId: reqId,
+          amount: numericAmount,
+          description: description.trim(),
+          status: 'PENDING'
+        },
         createdAt: now
       };
       localState.groupMessages.push(rawMsg);
@@ -1839,8 +1925,8 @@ async function payPaymentRequest({ requestId, payerId }) {
         'UPDATE wallets SET balance = balance - $1, updated_at = $2 WHERE user_id = $3 RETURNING *',
         [amount, now, payerId]
       );
-      await client.query(
-        'UPDATE wallets SET balance = balance + $1, updated_at = $2 WHERE user_id = $3',
+      const updatedCreatorWallet = await client.query(
+        'UPDATE wallets SET balance = balance + $1, updated_at = $2 WHERE user_id = $3 RETURNING *',
         [amount, now, creator.id]
       );
 
@@ -1881,9 +1967,10 @@ async function payPaymentRequest({ requestId, payerId }) {
         ]
       );
 
-      await client.query(
+      const notifRes = await client.query(
         `INSERT INTO notifications (id, user_id, title, message, type, metadata, created_at)
-         VALUES ($1, $2, 'Payment Request Settled!', $3, 'REQUEST_PAID', $4, $5)`,
+         VALUES ($1, $2, 'Payment Request Settled!', $3, 'REQUEST_PAID', $4, $5)
+         RETURNING *`,
         [
           generateId('ntf'),
           creator.id,
@@ -1895,6 +1982,17 @@ async function payPaymentRequest({ requestId, payerId }) {
 
       let alertMessage = null;
       if (reqRow.plan_id) {
+        await client.query(
+          `UPDATE group_messages
+           SET metadata = COALESCE(metadata, '{}'::jsonb) || $1::jsonb
+           WHERE plan_id = $2 AND metadata->>'requestId' = $3`,
+          [
+            JSON.stringify({ status: 'PAID', paidBy: payer.username, paidByUserId: payerId, paidAt: now }),
+            reqRow.plan_id,
+            requestId
+          ]
+        );
+
         const msgRes = await client.query(
           `INSERT INTO group_messages (id, plan_id, sender_id, content, type, metadata, created_at)
            VALUES ($1, $2, $3, $4, 'ACTIVITY_ALERT', $5, $6)
@@ -1904,7 +2002,7 @@ async function payPaymentRequest({ requestId, payerId }) {
             reqRow.plan_id,
             payerId,
             `✅ @${payer.username} paid ₦${amount.toLocaleString('en-NG')} to @${creator.username} for "${reqRow.description}"`,
-            JSON.stringify({ event: 'PAYMENT_REQUEST_PAID', requestId, amount }),
+            JSON.stringify({ event: 'PAYMENT_REQUEST_PAID', requestId, amount, status: 'PAID' }),
             now
           ]
         );
@@ -1921,6 +2019,7 @@ async function payPaymentRequest({ requestId, payerId }) {
 
       const r = updatedReq.rows[0];
       const t = txRes.rows[0];
+      const nRow = notifRes.rows[0];
       return {
         paymentRequest: {
           id: r.id,
@@ -1930,6 +2029,7 @@ async function payPaymentRequest({ requestId, payerId }) {
           currency: r.currency,
           description: r.description,
           status: r.status,
+          paidBy: payer.username,
           paidByUserId: r.paid_by_user_id,
           paidAt: r.paid_at,
           createdAt: r.created_at
@@ -1938,6 +2038,7 @@ async function payPaymentRequest({ requestId, payerId }) {
           id: t.id,
           userId: t.user_id,
           type: t.type,
+          direction: 'DEBIT',
           amount: roundMoney(t.amount),
           currency: t.currency,
           reference: t.reference,
@@ -1945,7 +2046,19 @@ async function payPaymentRequest({ requestId, payerId }) {
           createdAt: t.created_at
         },
         newBalance: roundMoney(updatedPayerWallet.rows[0].balance),
+        creatorBalance: roundMoney(updatedCreatorWallet.rows[0]?.balance || 0),
         creator,
+        creatorNotification: {
+          id: nRow.id,
+          userId: nRow.user_id,
+          title: nRow.title,
+          message: nRow.message,
+          body: nRow.message,
+          type: nRow.type,
+          isRead: nRow.is_read,
+          metadata: nRow.metadata || {},
+          createdAt: nRow.created_at
+        },
         alertMessage
       };
     });
@@ -1988,6 +2101,7 @@ async function payPaymentRequest({ requestId, payerId }) {
     creatorWallet.updatedAt = now;
 
     reqItem.status = 'PAID';
+    reqItem.paidBy = payer.username;
     reqItem.paidByUserId = payerId;
     reqItem.paidAt = now;
 
@@ -1995,6 +2109,7 @@ async function payPaymentRequest({ requestId, payerId }) {
       id: generateId('txn'),
       userId: payerId,
       type: 'P2P_SEND',
+      direction: 'DEBIT',
       amount,
       currency: 'NGN',
       reference: `${baseRef}-OUT`,
@@ -2006,6 +2121,7 @@ async function payPaymentRequest({ requestId, payerId }) {
       id: generateId('txn'),
       userId: creator.id,
       type: 'P2P_RECEIVE',
+      direction: 'CREDIT',
       amount,
       currency: 'NGN',
       reference: `${baseRef}-IN`,
@@ -2015,26 +2131,40 @@ async function payPaymentRequest({ requestId, payerId }) {
     };
     localState.transactions.push(sendTx, recTx);
 
-    localState.notifications.push({
+    const creatorNotification = {
       id: generateId('ntf'),
       userId: creator.id,
       title: 'Payment Request Settled!',
       message: `@${payer.username} paid ₦${amount.toLocaleString('en-NG')} for "${reqItem.description}".`,
+      body: `@${payer.username} paid ₦${amount.toLocaleString('en-NG')} for "${reqItem.description}".`,
       type: 'REQUEST_PAID',
       isRead: false,
       metadata: { requestId, payerId, amount },
       createdAt: now
-    });
+    };
+    localState.notifications.push(creatorNotification);
 
     let alertMessage = null;
     if (reqItem.planId) {
+      localState.groupMessages.forEach((gm) => {
+        if (gm.planId === reqItem.planId && gm.metadata?.requestId === requestId) {
+          gm.metadata = {
+            ...gm.metadata,
+            status: 'PAID',
+            paidBy: payer.username,
+            paidByUserId: payerId,
+            paidAt: now
+          };
+        }
+      });
+
       const rawMsg = {
         id: generateId('msg'),
         planId: reqItem.planId,
         senderId: payerId,
         content: `✅ @${payer.username} paid ₦${amount.toLocaleString('en-NG')} to @${creator.username} for "${reqItem.description}"`,
         type: 'ACTIVITY_ALERT',
-        metadata: { event: 'PAYMENT_REQUEST_PAID', requestId, amount },
+        metadata: { event: 'PAYMENT_REQUEST_PAID', requestId, amount, status: 'PAID' },
         createdAt: now
       };
       localState.groupMessages.push(rawMsg);
@@ -2053,7 +2183,9 @@ async function payPaymentRequest({ requestId, payerId }) {
       paymentRequest: { ...reqItem },
       transaction: sendTx,
       newBalance: payerWallet.balance,
+      creatorBalance: creatorWallet.balance,
       creator,
+      creatorNotification,
       alertMessage
     };
   });
@@ -2070,6 +2202,7 @@ async function listNotifications(userId) {
       userId: n.user_id,
       title: n.title,
       message: n.message,
+      body: n.message,
       type: n.type,
       isRead: n.is_read,
       metadata: n.metadata || {},
@@ -2082,7 +2215,11 @@ async function listNotifications(userId) {
   const notifications = localState.notifications
     .filter((n) => n.userId === userId)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 50);
+    .slice(0, 50)
+    .map((n) => ({
+      ...n,
+      body: n.message || n.body
+    }));
   const unreadCount = notifications.filter((n) => !n.isRead).length;
   return { notifications, unreadCount };
 }
@@ -2090,7 +2227,7 @@ async function listNotifications(userId) {
 async function markAllNotificationsRead(userId) {
   if (isPostgresMode) {
     await pgPool.query('UPDATE notifications SET is_read = TRUE WHERE user_id = $1', [userId]);
-    return { success: true };
+    return { success: true, unreadCount: 0 };
   }
 
   localState.notifications.forEach((n) => {
@@ -2099,7 +2236,7 @@ async function markAllNotificationsRead(userId) {
     }
   });
   persistLocalState();
-  return { success: true };
+  return { success: true, unreadCount: 0 };
 }
 
 module.exports = {

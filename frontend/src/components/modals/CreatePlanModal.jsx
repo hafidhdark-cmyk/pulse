@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Modal from '../common/Modal';
 import { api } from '../../api/client';
 import { useNotifications } from '../../context/NotificationContext';
-import { Users, User, Calendar, Target } from 'lucide-react';
+import { Users, User } from 'lucide-react';
 
 export default function CreatePlanModal({ isOpen, onClose, onPlanCreated }) {
   const { showToast } = useNotifications();
@@ -17,12 +17,12 @@ export default function CreatePlanModal({ isOpen, onClose, onPlanCreated }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
-      showToast("Please provide a plan title", "error");
+      showToast('Please provide a plan title', 'error');
       return;
     }
     const target = Number(targetAmount);
     if (!target || target <= 0) {
-      showToast("Target amount must be greater than zero", "error");
+      showToast('Target amount must be greater than zero', 'error');
       return;
     }
 
@@ -36,31 +36,30 @@ export default function CreatePlanModal({ isOpen, onClose, onPlanCreated }) {
         frequency,
         deadline: deadline || undefined
       });
-      showToast(`Savings plan "${title}" created!`, "success");
+      showToast(`Savings plan "${title}" created.`, 'success');
       onPlanCreated(res.plan);
       onClose();
       setTitle('');
       setDescription('');
       setTargetAmount('');
     } catch (err) {
-      showToast(err.message || "Failed to create plan", "error");
+      showToast(err.message || 'Failed to create plan', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create New Savings Goal">
+    <Modal isOpen={isOpen} onClose={onClose} title="Create Savings Plan">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Type Switcher */}
-        <div className="grid grid-cols-2 gap-2 p-1 bg-[#F4F8FF] rounded-xl border border-[#DCE7F9]">
+        <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-lg border border-slate-200">
           <button
             type="button"
             onClick={() => setType('GROUP')}
-            className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition ${
+            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-semibold transition ${
               type === 'GROUP'
-                ? 'bg-white text-[#1D4ED8] shadow-sm'
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Users size={14} />
@@ -69,10 +68,10 @@ export default function CreatePlanModal({ isOpen, onClose, onPlanCreated }) {
           <button
             type="button"
             onClick={() => setType('PERSONAL')}
-            className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition ${
+            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-semibold transition ${
               type === 'PERSONAL'
-                ? 'bg-white text-[#1D4ED8] shadow-sm'
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <User size={14} />
@@ -80,55 +79,57 @@ export default function CreatePlanModal({ isOpen, onClose, onPlanCreated }) {
           </button>
         </div>
 
-        {/* Title */}
         <div>
-          <label className="block text-xs font-semibold text-[#475569] mb-1">Plan Title</label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Plan Title</label>
           <input
             type="text"
             required
-            placeholder={type === 'GROUP' ? "e.g. December Detty Group Plan" : "e.g. Emergency Rainy Day Fund"}
+            placeholder={type === 'GROUP' ? 'Enter group plan name' : 'Enter personal goal name'}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#DCE7F9] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#1D4ED8] transition"
+            className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
           />
         </div>
 
-        {/* Description */}
         <div>
-          <label className="block text-xs font-semibold text-[#475569] mb-1">Description (Optional)</label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            Description (Optional)
+          </label>
           <input
             type="text"
-            placeholder="What is this fund for?"
+            placeholder="Purpose of this savings plan"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full h-11 px-3.5 bg-[#F8FAFC] border border-[#DCE7F9] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#1D4ED8] transition"
+            className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
           />
         </div>
 
-        {/* Target Amount */}
         <div>
-          <label className="block text-xs font-semibold text-[#475569] mb-1">Target Amount (₦)</label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            Target Amount (₦)
+          </label>
           <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B] font-mono font-bold">₦</span>
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono font-semibold">
+              ₦
+            </span>
             <input
               type="number"
               required
-              placeholder="100000"
+              placeholder="Enter target amount"
               value={targetAmount}
               onChange={(e) => setTargetAmount(e.target.value)}
-              className="w-full h-11 pl-8 pr-4 bg-[#F8FAFC] border border-[#DCE7F9] rounded-xl text-sm font-mono text-[#0F172A] focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
+              className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
             />
           </div>
         </div>
 
-        {/* Frequency & Deadline Row */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-[#475569] mb-1">Frequency</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Frequency</label>
             <select
               value={frequency}
               onChange={(e) => setFrequency(e.target.value)}
-              className="w-full h-11 px-3 bg-[#F8FAFC] border border-[#DCE7F9] rounded-xl text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1D4ED8] transition"
+              className="w-full h-11 px-3 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
             >
               <option value="WEEKLY">Weekly</option>
               <option value="DAILY">Daily</option>
@@ -138,12 +139,14 @@ export default function CreatePlanModal({ isOpen, onClose, onPlanCreated }) {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#475569] mb-1">Target Deadline</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Target Date (Optional)
+            </label>
             <input
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className="w-full h-11 px-3 bg-[#F8FAFC] border border-[#DCE7F9] rounded-xl text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#1D4ED8] transition"
+              className="w-full h-11 px-3 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
             />
           </div>
         </div>
@@ -151,9 +154,13 @@ export default function CreatePlanModal({ isOpen, onClose, onPlanCreated }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-12 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-sm rounded-xl transition shadow-md shadow-blue-500/20 disabled:opacity-50 mt-2"
+          className="w-full h-11 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-semibold text-sm rounded-lg transition disabled:opacity-50 mt-2"
         >
-          {loading ? "Creating..." : type === 'GROUP' ? "Create Group Vault & Generate Code" : "Start Personal Target"}
+          {loading
+            ? 'Creating...'
+            : type === 'GROUP'
+            ? 'Create Group Plan'
+            : 'Create Personal Plan'}
         </button>
       </form>
     </Modal>

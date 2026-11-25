@@ -36,23 +36,32 @@ function initSocket(httpServer) {
       socket.join(`user:${socket.user.id}`);
     }
 
-    socket.on('join:user', (userId) => {
+    socket.on('join:user', (payload) => {
+      const userId = typeof payload === 'object' ? payload?.userId : payload;
       if (userId) {
         socket.join(`user:${userId}`);
       }
     });
 
-    socket.on('join:plan', (planId) => {
+    const handleJoinPlan = (payload) => {
+      const planId = typeof payload === 'object' ? payload?.planId : payload;
       if (planId) {
         socket.join(`plan:${planId}`);
       }
-    });
+    };
 
-    socket.on('leave:plan', (planId) => {
+    const handleLeavePlan = (payload) => {
+      const planId = typeof payload === 'object' ? payload?.planId : payload;
       if (planId) {
         socket.leave(`plan:${planId}`);
       }
-    });
+    };
+
+    socket.on('join:plan', handleJoinPlan);
+    socket.on('join_plan_room', handleJoinPlan);
+
+    socket.on('leave:plan', handleLeavePlan);
+    socket.on('leave_plan_room', handleLeavePlan);
 
     socket.on('chat:send', async (payload, ack) => {
       try {

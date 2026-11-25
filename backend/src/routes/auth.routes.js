@@ -77,11 +77,14 @@ router.post('/auth/login', async (req, res, next) => {
 // GET /api/auth/me
 router.get('/auth/me', requireAuth, async (req, res, next) => {
   try {
-    const wallet = await db.getWalletByUserId(req.user.id);
-    const { unreadCount } = await db.listNotifications(req.user.id);
+    const [wallet, totalSaved, { unreadCount }] = await Promise.all([
+      db.getWalletByUserId(req.user.id),
+      db.getTotalSavedByUserId(req.user.id),
+      db.listNotifications(req.user.id)
+    ]);
     return res.json({
       user: req.user,
-      wallet,
+      wallet: wallet ? { ...wallet, totalSaved } : { balance: 0, totalSaved: 0, currency: 'NGN' },
       unreadNotifications: unreadCount
     });
   } catch (err) {

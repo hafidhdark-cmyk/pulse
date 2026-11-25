@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 
-export default function Modal({ isOpen, onClose, title, children, maxWidth = "max-w-md" }) {
+export default function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-md' }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
@@ -19,35 +19,31 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "ma
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex sm:items-center items-end justify-center sm:p-4 overflow-y-auto">
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+    <div className="fixed inset-0 z-50 flex sm:items-center items-end justify-center sm:p-4">
+      <div
+        className="fixed inset-0 bg-slate-900/50 transition-opacity"
         onClick={onClose}
       />
 
-      {/* Dialog Card (Bottom sheet on mobile, centered modal on desktop) */}
-      <div className={`relative w-full ${maxWidth} bg-white border border-[#DCE7F9] rounded-t-3xl sm:rounded-2xl shadow-elevation overflow-hidden z-10 transition-all max-h-[90vh] flex flex-col`}>
-        {/* Mobile handle indicator */}
+      <div
+        className={`relative w-full ${maxWidth} bg-white border border-slate-200 rounded-t-2xl sm:rounded-xl shadow-xl overflow-hidden z-10 max-h-[92vh] flex flex-col`}
+      >
         <div className="sm:hidden flex justify-center pt-2.5 pb-1">
           <div className="w-10 h-1 bg-slate-300 rounded-full" />
         </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#DCE7F9] bg-[#F8FAFC]">
-          <h3 className="text-base font-bold text-[#0F172A]">{title}</h3>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900">{title}</h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+            aria-label="Close modal"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 overflow-y-auto">
-          {children}
-        </div>
+        <div className="p-5 pb-8 sm:pb-5 overflow-y-auto">{children}</div>
       </div>
     </div>
   );
