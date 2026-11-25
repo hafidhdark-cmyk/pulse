@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pulse_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-pulsedb}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulse} -d ${POSTGRES_DB:-pulsedb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-pulse-hackathon-secret}
+      # Point DATABASE_URL to your Nobus DB instance IP/hostname, or default to the local db container:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://pulse:pulse_secret@db:5432/pulsedb}
+      DB_SSL: ${DB_SSL:-false}
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  pg_data:
