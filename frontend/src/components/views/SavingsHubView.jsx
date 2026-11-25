@@ -21,72 +21,72 @@ export default function SavingsHubView({ plans = [], onSelectPlan, onOpenCreate,
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Collaborative Savings Banner Card */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-center">
+        <div className="lg:col-span-4 order-first lg:order-last">
+          <img
+            src={collabHeroImg}
+            alt="Collaborative savings team"
+            className="w-full h-32 sm:h-44 object-cover rounded-lg border border-slate-200"
+          />
+        </div>
+
         <div className="lg:col-span-8 space-y-2">
           <div className="flex items-center gap-2">
             <Badge variant="primary">Collaborative &amp; Personal Vaults</Badge>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+          <h2 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
             Pool funds together or save toward personal milestones
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-            Create a shared group plan to generate an invite code for your circle, track each member&apos;s share on a live leaderboard, and coordinate in the activity chat.
+            Create a shared group plan with an invite code, track member shares on a live leaderboard, and require group approval for withdrawals.
           </p>
-          <div className="pt-2 flex flex-wrap items-center gap-2.5">
+          <div className="pt-2 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5">
             <button
               onClick={onOpenCreate}
-              className="flex items-center justify-center gap-1.5 h-10 px-4 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-semibold rounded-lg transition"
+              className="flex items-center justify-center gap-1.5 min-h-[44px] sm:h-10 px-4 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-semibold rounded-lg transition"
             >
               <Plus size={15} strokeWidth={2.5} />
-              <span>New Savings Plan</span>
+              <span>New Plan</span>
             </button>
 
             <button
               onClick={onOpenJoin}
-              className="flex items-center justify-center gap-1.5 h-10 px-4 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 transition"
+              className="flex items-center justify-center gap-1.5 min-h-[44px] sm:h-10 px-4 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 transition"
             >
               <KeyRound size={14} />
-              <span>Join with Invite Code</span>
+              <span>Join with Code</span>
             </button>
           </div>
-        </div>
-
-        <div className="lg:col-span-4">
-          <img
-            src={collabHeroImg}
-            alt="Collaborative savings team"
-            className="w-full h-40 sm:h-44 object-cover rounded-lg border border-slate-200"
-          />
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-1.5 border-b border-slate-200 pb-3 overflow-x-auto">
+      <div className="grid grid-cols-3 sm:flex gap-1.5 border-b border-slate-200 pb-3">
         <button
           onClick={() => setFilter('ALL')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+          className={`px-3 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition text-center whitespace-nowrap ${
             filter === 'ALL'
               ? 'bg-slate-900 text-white'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          All Plans ({plans.length})
+          All ({plans.length})
         </button>
         <button
           onClick={() => setFilter('GROUP')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+          className={`px-3 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition text-center whitespace-nowrap ${
             filter === 'GROUP'
               ? 'bg-slate-900 text-white'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          Group Pools ({plans.filter((p) => p.type === 'GROUP').length})
+          Groups ({plans.filter((p) => p.type === 'GROUP').length})
         </button>
         <button
           onClick={() => setFilter('PERSONAL')}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+          className={`px-3 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition text-center whitespace-nowrap ${
             filter === 'PERSONAL'
               ? 'bg-slate-900 text-white'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -98,40 +98,40 @@ export default function SavingsHubView({ plans = [], onSelectPlan, onOpenCreate,
 
       {/* Plans Grid */}
       {filteredPlans.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-8 sm:p-10 text-center">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-10 text-center">
           <img
             src={vaultIllustration}
             alt="Shared savings vault"
-            className="w-24 h-24 mx-auto rounded-xl object-cover border border-slate-200 mb-4"
+            className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-xl object-cover border border-slate-200 mb-4"
           />
           <h3 className="text-sm sm:text-base font-bold text-slate-900">No savings plans in this view</h3>
           <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
             Create a group savings pool to save with friends or start a personal target.
           </p>
-          <div className="mt-4 flex items-center justify-center gap-2">
+          <div className="mt-4 grid grid-cols-2 sm:flex items-center justify-center gap-2 max-w-xs sm:max-w-none mx-auto">
             <button
               onClick={onOpenCreate}
-              className="h-10 px-4 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-semibold rounded-lg transition"
+              className="min-h-[42px] px-4 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-semibold rounded-lg transition"
             >
               Create Plan
             </button>
             <button
               onClick={onOpenJoin}
-              className="h-10 px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition"
+              className="min-h-[42px] px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition"
             >
-              Enter Invite Code
+              Invite Code
             </button>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 items-stretch">
           {filteredPlans.map((plan) => (
             <div
               key={plan.id}
               onClick={() => onSelectPlan(plan.id)}
               className="group bg-white hover:bg-slate-50/50 border border-slate-200 hover:border-slate-300 rounded-xl overflow-hidden transition cursor-pointer flex flex-col justify-between h-full"
             >
-              <div className="p-5 pb-4">
+              <div className="p-4 sm:p-5 pb-4">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center shrink-0">
@@ -178,7 +178,7 @@ export default function SavingsHubView({ plans = [], onSelectPlan, onOpenCreate,
                 />
               </div>
 
-              <div className="px-5 py-3 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
+              <div className="px-4 sm:px-5 py-3 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
                 <div className="flex items-center gap-2">
                   {plan.type === 'GROUP' && plan.inviteCode && (
                     <span className="font-mono text-[11px] bg-white text-slate-800 px-2 py-0.5 rounded border border-slate-200 font-semibold">
@@ -188,8 +188,6 @@ export default function SavingsHubView({ plans = [], onSelectPlan, onOpenCreate,
                   <span>
                     {plan.memberCount || 1} {(plan.memberCount || 1) === 1 ? 'member' : 'members'}
                   </span>
-                  <span>•</span>
-                  <span className="capitalize">{(plan.frequency || 'FLEXIBLE').toLowerCase()}</span>
                 </div>
 
                 <span className="inline-flex items-center gap-1 text-[#1D4ED8] font-semibold">

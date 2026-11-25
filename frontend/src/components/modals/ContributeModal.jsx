@@ -65,7 +65,7 @@ export default function ContributeModal({ isOpen, onClose, plan, onContributed }
               placeholder="Enter amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
+              className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-base sm:text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
             />
           </div>
 

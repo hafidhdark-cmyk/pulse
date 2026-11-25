@@ -1,7 +1,8 @@
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 async function request(endpoint, options = {}) {
-  const token = localStorage.getItem('pulse_token');
+  const rawToken = localStorage.getItem('pulse_token');
+  const token = rawToken && rawToken !== 'null' && rawToken !== 'undefined' ? rawToken.trim() : null;
   const headers = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -13,9 +14,25 @@ async function request(endpoint, options = {}) {
     headers
   });
 
-  const data = await response.json();
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
   if (!response.ok) {
-    throw new Error(data.error || 'Request failed');
+    if (response.status === 401 && !endpoint.startsWith('/auth/login') && !endpoint.startsWith('/auth/register')) {
+      localStorage.removeItem('pulse_token');
+      window.dispatchEvent(
+        new CustomEvent('pulse:unauthorized', {
+          detail: { message: data.error || 'Session expired. Please sign in again.' }
+        })
+      );
+    }
+    const err = new Error(data.error || 'Request failed');
+    err.status = response.status;
+    throw err;
   }
   return data;
 }
@@ -50,7 +67,14 @@ export const api = {
     joinPlan: (payload) =>
       request('/savings/join', { method: 'POST', body: JSON.stringify(payload) }),
     contribute: (id, payload) =>
-      request(`/savings/${id}/contribute`, { method: 'POST', body: JSON.stringify(payload) })
+      request(`/savings/${id}/contribute`, { method: 'POST', body: JSON.stringify(payload) }),
+    withdraw: (id, payload) =>
+      request(`/savings/${id}/withdraw`, { method: 'POST', body: JSON.stringify(payload) }),
+    approveWithdrawal: (planId, withdrawalId, action = 'APPROVE') =>
+      request(`/savings/${planId}/withdrawals/${withdrawalId}/approve`, {
+        method: 'POST',
+        body: JSON.stringify({ action })
+      })
   },
 
   chat: {

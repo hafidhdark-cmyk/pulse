@@ -147,7 +147,7 @@ export default function SendP2PModal({ isOpen, onClose }) {
                 placeholder="Enter username"
                 value={recipientQuery}
                 onChange={(e) => setRecipientQuery(e.target.value)}
-                className="w-full h-11 pl-8 pr-16 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
+                className="w-full h-11 pl-8 pr-16 bg-white border border-slate-300 rounded-lg text-base sm:text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
               />
               {lookingUp && (
                 <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">
@@ -193,7 +193,7 @@ export default function SendP2PModal({ isOpen, onClose }) {
                 placeholder="Enter amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
+                className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-base sm:text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
               />
             </div>
           </div>
@@ -207,7 +207,7 @@ export default function SendP2PModal({ isOpen, onClose }) {
               placeholder="Add a note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
+              className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-base sm:text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
             />
           </div>
 

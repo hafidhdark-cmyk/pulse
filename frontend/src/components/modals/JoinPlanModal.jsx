@@ -48,7 +48,7 @@ export default function JoinPlanModal({ isOpen, onClose, onJoined }) {
               maxLength={12}
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-              className="w-full h-11 pl-9 pr-4 bg-white border border-slate-300 rounded-lg text-slate-900 text-center font-mono font-bold tracking-widest text-sm focus:outline-none focus:border-[#1D4ED8] transition uppercase"
+              className="w-full h-11 pl-9 pr-4 bg-white border border-slate-300 rounded-lg text-slate-900 text-center font-mono font-bold tracking-widest text-base sm:text-sm focus:outline-none focus:border-[#1D4ED8] transition uppercase"
             />
           </div>
           <p className="mt-2 text-xs text-slate-500">

@@ -67,6 +67,8 @@ function computeSavingsInsights(plan, members) {
   const recommendation =
     remainingAmount === 0
       ? 'Target achieved. This savings plan is 100% funded.'
+      : plan.type === 'PERSONAL'
+      ? `Save ₦${dailyPerMember.toLocaleString('en-NG')}/day (or ₦${weeklyPerMember.toLocaleString('en-NG')}/week) to reach ₦${targetAmount.toLocaleString('en-NG')} within ${daysRemaining} day(s).`
       : `Contribute ₦${dailyPerMember.toLocaleString('en-NG')}/day (or ₦${weeklyPerMember.toLocaleString('en-NG')}/week) per member to reach ₦${targetAmount.toLocaleString('en-NG')} within ${daysRemaining} day(s).`;
 
   const isCompleted = completionPercentage >= 100 || remainingAmount === 0;
@@ -138,6 +140,7 @@ function createEmptyState() {
     savingsMembers: [],
     groupMessages: [],
     paymentRequests: [],
+    withdrawalRequests: [],
     notifications: []
   };
 }
@@ -195,6 +198,7 @@ async function resetDb() {
     await pgPool.query(`
       TRUNCATE TABLE
         notifications,
+        withdrawal_requests,
         payment_requests,
         group_messages,
         savings_members,
@@ -470,7 +474,7 @@ async function getTotalSavedByUserId(userId) {
 }
 
 async function listTransactionsByUserId(userId, limit = 50) {
-  const creditTypes = new Set(['WALLET_FUND', 'FUND', 'P2P_RECEIVE']);
+  const creditTypes = new Set(['WALLET_FUND', 'FUND', 'P2P_RECEIVE', 'SAVINGS_WITHDRAWAL']);
   if (isPostgresMode) {
     const res = await pgPool.query(
       'SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2',
@@ -1055,11 +1059,38 @@ async function getSavingsPlanDetails(planId, requestingUserId) {
     };
 
     const leaderboard = computeLeaderboard(plan, members);
+    const wdRes = await pgPool.query(
+      `SELECT wr.*, u.name AS requester_name, u.username AS requester_username
+       FROM withdrawal_requests wr
+       INNER JOIN users u ON u.id = wr.requester_id
+       WHERE wr.plan_id = $1
+       ORDER BY wr.created_at DESC`,
+      [planId]
+    );
+    const withdrawalRequests = wdRes.rows.map((w) => ({
+      id: w.id,
+      planId: w.plan_id,
+      requesterId: w.requester_id,
+      requester: {
+        id: w.requester_id,
+        name: w.requester_name,
+        username: w.requester_username
+      },
+      amount: roundMoney(w.amount),
+      reason: w.reason || '',
+      status: w.status,
+      approvals: Array.isArray(w.approvals) ? w.approvals : [],
+      requiredApprovals: Number(w.required_approvals || 2),
+      resolvedAt: w.resolved_at,
+      createdAt: w.created_at
+    }));
+
     return {
       plan,
       members: leaderboard,
       leaderboard,
-      insights: computeSavingsInsights(plan, members)
+      insights: computeSavingsInsights(plan, members),
+      withdrawalRequests
     };
   }
 
@@ -1105,12 +1136,28 @@ async function getSavingsPlanDetails(planId, requestingUserId) {
     progressPercentage: pct
   };
   const leaderboard = computeLeaderboard(formattedPlan, members);
+  const withdrawalRequests = (localState.withdrawalRequests || [])
+    .filter((w) => w.planId === planId)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .map((w) => {
+      const reqUser = localState.users.find((u) => u.id === w.requesterId) || {};
+      return {
+        ...w,
+        amount: roundMoney(w.amount),
+        requester: {
+          id: w.requesterId,
+          name: reqUser.name || 'Member',
+          username: reqUser.username || 'member'
+        }
+      };
+    });
 
   return {
     plan: formattedPlan,
     members: leaderboard,
     leaderboard,
-    insights: computeSavingsInsights(formattedPlan, members)
+    insights: computeSavingsInsights(formattedPlan, members),
+    withdrawalRequests
   };
 }
 
@@ -1449,6 +1496,18 @@ async function createGroupMessage({ planId, senderId, content, type = 'CHAT', me
   const msgId = generateId('msg');
 
   if (isPostgresMode) {
+    const planRes = await pgPool.query('SELECT type FROM savings_plans WHERE id = $1 LIMIT 1', [planId]);
+    if (!planRes.rows[0]) {
+      const err = new Error('Savings plan not found');
+      err.status = 404;
+      throw err;
+    }
+    if (planRes.rows[0].type !== 'GROUP' && type === 'CHAT') {
+      const err = new Error('Chat is only available for group savings plans');
+      err.status = 400;
+      throw err;
+    }
+
     const memCheck = await pgPool.query(
       'SELECT 1 FROM savings_members WHERE plan_id = $1 AND user_id = $2 LIMIT 1',
       [planId, senderId]
@@ -1484,6 +1543,18 @@ async function createGroupMessage({ planId, senderId, content, type = 'CHAT', me
       metadata: row.metadata || {},
       createdAt: row.created_at
     };
+  }
+
+  const plan = localState.savingsPlans.find((p) => p.id === planId);
+  if (!plan) {
+    const err = new Error('Savings plan not found');
+    err.status = 404;
+    throw err;
+  }
+  if (plan.type !== 'GROUP' && type === 'CHAT') {
+    const err = new Error('Chat is only available for group savings plans');
+    err.status = 400;
+    throw err;
   }
 
   const isMember = localState.savingsMembers.some(
@@ -2239,6 +2310,739 @@ async function markAllNotificationsRead(userId) {
   return { success: true, unreadCount: 0 };
 }
 
+async function requestOrExecuteWithdrawal({ planId, userId, amount, reason = '' }) {
+  const numericAmount = roundMoney(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    const err = new Error('Withdrawal amount must be greater than 0');
+    err.status = 400;
+    throw err;
+  }
+
+  const cleanReason = (reason || '').trim();
+  const now = new Date().toISOString();
+  const txRef = `PLS-WDR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  if (isPostgresMode) {
+    return withTransaction(async (client) => {
+      const planRes = await client.query('SELECT * FROM savings_plans WHERE id = $1 FOR UPDATE', [planId]);
+      const planRow = planRes.rows[0];
+      if (!planRow) {
+        const err = new Error('Savings plan not found');
+        err.status = 404;
+        throw err;
+      }
+
+      const memRes = await client.query(
+        'SELECT * FROM savings_members WHERE plan_id = $1 ORDER BY joined_at ASC FOR UPDATE',
+        [planId]
+      );
+      const myMember = memRes.rows.find((m) => m.user_id === userId);
+      if (!myMember) {
+        const err = new Error('You are not a member of this savings plan');
+        err.status = 403;
+        throw err;
+      }
+
+      if (roundMoney(planRow.current_amount) < numericAmount) {
+        const err = new Error('Withdrawal amount exceeds available savings balance');
+        err.status = 400;
+        throw err;
+      }
+
+      const userRes = await client.query('SELECT * FROM users WHERE id = $1 LIMIT 1', [userId]);
+      const user = formatSafeUser(userRes.rows[0]);
+
+      if (planRow.type === 'PERSONAL') {
+        const newCurrent = Math.max(0, roundMoney(Number(planRow.current_amount) - numericAmount));
+        const updatedPlan = await client.query(
+          'UPDATE savings_plans SET current_amount = $1, status = $2 WHERE id = $3 RETURNING *',
+          [newCurrent, newCurrent < roundMoney(planRow.target_amount) ? 'ACTIVE' : planRow.status, planId]
+        );
+
+        const newMemberContrib = Math.max(0, roundMoney(Number(myMember.contributed_amount) - numericAmount));
+        await client.query(
+          'UPDATE savings_members SET contributed_amount = $1 WHERE plan_id = $2 AND user_id = $3',
+          [newMemberContrib, planId, userId]
+        );
+
+        const updatedWallet = await client.query(
+          'UPDATE wallets SET balance = balance + $1, updated_at = $2 WHERE user_id = $3 RETURNING *',
+          [numericAmount, now, userId]
+        );
+
+        const desc = cleanReason
+          ? `Withdrawal from "${planRow.title}": ${cleanReason}`
+          : `Withdrawal from "${planRow.title}" to wallet`;
+
+        const txRes = await client.query(
+          `INSERT INTO transactions (id, user_id, type, amount, currency, reference, description, metadata, created_at)
+           VALUES ($1, $2, 'SAVINGS_WITHDRAWAL', $3, 'NGN', $4, $5, $6, $7)
+           RETURNING *`,
+          [generateId('txn'), userId, numericAmount, txRef, desc, JSON.stringify({ planId }), now]
+        );
+
+        const msgRes = await client.query(
+          `INSERT INTO group_messages (id, plan_id, sender_id, content, type, metadata, created_at)
+           VALUES ($1, $2, $3, $4, 'ACTIVITY_ALERT', $5, $6)
+           RETURNING *`,
+          [
+            generateId('msg'),
+            planId,
+            userId,
+            `Withdrew ₦${numericAmount.toLocaleString('en-NG')} to wallet${cleanReason ? ` (${cleanReason})` : ''}.`,
+            JSON.stringify({ event: 'WITHDRAWAL_COMPLETED', amount: numericAmount }),
+            now
+          ]
+        );
+
+        const p = updatedPlan.rows[0];
+        return {
+          mode: 'INSTANT',
+          plan: {
+            id: p.id,
+            creatorId: p.creator_id,
+            title: p.title,
+            description: p.description,
+            targetAmount: roundMoney(p.target_amount),
+            currentAmount: roundMoney(p.current_amount),
+            type: p.type,
+            inviteCode: p.invite_code,
+            frequency: p.frequency,
+            deadline: p.deadline,
+            status: p.status,
+            createdAt: p.created_at
+          },
+          walletBalance: roundMoney(updatedWallet.rows[0].balance),
+          transaction: {
+            id: txRes.rows[0].id,
+            type: txRes.rows[0].type,
+            direction: 'CREDIT',
+            amount: roundMoney(txRes.rows[0].amount),
+            reference: txRes.rows[0].reference
+          },
+          alertMessage: {
+            id: msgRes.rows[0].id,
+            planId,
+            sender: user,
+            content: msgRes.rows[0].content,
+            type: 'ACTIVITY_ALERT',
+            metadata: msgRes.rows[0].metadata,
+            createdAt: msgRes.rows[0].created_at
+          }
+        };
+      }
+
+      const memberCount = memRes.rows.length;
+      const requiredApprovals = memberCount <= 1 ? 1 : Math.max(2, Math.floor(memberCount / 2) + 1);
+      if (memberCount <= 1) {
+        const err = new Error('At least 2 group members are required to approve a group withdrawal.');
+        err.status = 400;
+        throw err;
+      }
+
+      const wdId = generateId('wdr');
+      const approvals = [userId];
+
+      const wdRes = await client.query(
+        `INSERT INTO withdrawal_requests
+         (id, plan_id, requester_id, amount, reason, status, approvals, required_approvals, created_at)
+         VALUES ($1, $2, $3, $4, $5, 'PENDING', $6, $7, $8)
+         RETURNING *`,
+        [wdId, planId, userId, numericAmount, cleanReason, JSON.stringify(approvals), requiredApprovals, now]
+      );
+
+      const alertContent = `@${user.username} requested a group withdrawal of ₦${numericAmount.toLocaleString('en-NG')}${cleanReason ? ` for "${cleanReason}"` : ''} (1/${requiredApprovals} approvals).`;
+      const msgRes = await client.query(
+        `INSERT INTO group_messages (id, plan_id, sender_id, content, type, metadata, created_at)
+         VALUES ($1, $2, $3, $4, 'ACTIVITY_ALERT', $5, $6)
+         RETURNING *`,
+        [
+          generateId('msg'),
+          planId,
+          userId,
+          alertContent,
+          JSON.stringify({
+            event: 'WITHDRAWAL_REQUEST',
+            withdrawalId: wdId,
+            amount: numericAmount,
+            reason: cleanReason,
+            status: 'PENDING',
+            approvals,
+            requiredApprovals
+          }),
+          now
+        ]
+      );
+
+      for (const m of memRes.rows) {
+        if (m.user_id !== userId) {
+          await client.query(
+            `INSERT INTO notifications (id, user_id, title, message, type, metadata, created_at)
+             VALUES ($1, $2, 'Group Withdrawal Approval Needed', $3, 'WITHDRAWAL_REQUEST', $4, $5)`,
+            [
+              generateId('ntf'),
+              m.user_id,
+              `@${user.username} requested to withdraw ₦${numericAmount.toLocaleString('en-NG')} from "${planRow.title}". Your approval is required.`,
+              JSON.stringify({ planId, withdrawalId: wdId, amount: numericAmount }),
+              now
+            ]
+          );
+        }
+      }
+
+      const w = wdRes.rows[0];
+      return {
+        mode: 'APPROVAL_REQUIRED',
+        withdrawalRequest: {
+          id: w.id,
+          planId: w.plan_id,
+          requesterId: w.requester_id,
+          requester: user,
+          amount: roundMoney(w.amount),
+          reason: w.reason,
+          status: w.status,
+          approvals,
+          requiredApprovals,
+          createdAt: w.created_at
+        },
+        alertMessage: {
+          id: msgRes.rows[0].id,
+          planId,
+          sender: user,
+          content: msgRes.rows[0].content,
+          type: 'ACTIVITY_ALERT',
+          metadata: msgRes.rows[0].metadata,
+          createdAt: msgRes.rows[0].created_at
+        }
+      };
+    });
+  }
+
+  return withTransaction(async () => {
+    const plan = localState.savingsPlans.find((p) => p.id === planId);
+    if (!plan) {
+      const err = new Error('Savings plan not found');
+      err.status = 404;
+      throw err;
+    }
+
+    const planMembers = localState.savingsMembers.filter((m) => m.planId === planId);
+    const myMember = planMembers.find((m) => m.userId === userId);
+    if (!myMember) {
+      const err = new Error('You are not a member of this savings plan');
+      err.status = 403;
+      throw err;
+    }
+
+    if (roundMoney(plan.currentAmount) < numericAmount) {
+      const err = new Error('Withdrawal amount exceeds available savings balance');
+      err.status = 400;
+      throw err;
+    }
+
+    const user = formatSafeUser(localState.users.find((u) => u.id === userId));
+
+    if (plan.type === 'PERSONAL') {
+      plan.currentAmount = Math.max(0, roundMoney(plan.currentAmount - numericAmount));
+      if (plan.currentAmount < plan.targetAmount) {
+        plan.status = 'ACTIVE';
+      }
+      myMember.contributedAmount = Math.max(0, roundMoney(myMember.contributedAmount - numericAmount));
+
+      const wallet = localState.wallets.find((w) => w.userId === userId);
+      wallet.balance = roundMoney(wallet.balance + numericAmount);
+      wallet.updatedAt = now;
+
+      const transaction = {
+        id: generateId('txn'),
+        userId,
+        type: 'SAVINGS_WITHDRAWAL',
+        direction: 'CREDIT',
+        amount: numericAmount,
+        currency: 'NGN',
+        reference: txRef,
+        description: cleanReason
+          ? `Withdrawal from "${plan.title}": ${cleanReason}`
+          : `Withdrawal from "${plan.title}" to wallet`,
+        metadata: { planId },
+        createdAt: now
+      };
+      localState.transactions.push(transaction);
+
+      const rawMsg = {
+        id: generateId('msg'),
+        planId,
+        senderId: userId,
+        content: `Withdrew ₦${numericAmount.toLocaleString('en-NG')} to wallet${cleanReason ? ` (${cleanReason})` : ''}.`,
+        type: 'ACTIVITY_ALERT',
+        metadata: { event: 'WITHDRAWAL_COMPLETED', amount: numericAmount },
+        createdAt: now
+      };
+      localState.groupMessages.push(rawMsg);
+
+      return {
+        mode: 'INSTANT',
+        plan: { ...plan },
+        walletBalance: wallet.balance,
+        transaction,
+        alertMessage: {
+          id: rawMsg.id,
+          planId,
+          sender: user,
+          content: rawMsg.content,
+          type: rawMsg.type,
+          metadata: rawMsg.metadata,
+          createdAt: rawMsg.createdAt
+        }
+      };
+    }
+
+    const memberCount = planMembers.length;
+    if (memberCount <= 1) {
+      const err = new Error('At least 2 group members are required to approve a group withdrawal.');
+      err.status = 400;
+      throw err;
+    }
+
+    const requiredApprovals = Math.max(2, Math.floor(memberCount / 2) + 1);
+    const wdId = generateId('wdr');
+    const approvals = [userId];
+
+    const withdrawalRequest = {
+      id: wdId,
+      planId,
+      requesterId: userId,
+      requester: user,
+      amount: numericAmount,
+      reason: cleanReason,
+      status: 'PENDING',
+      approvals,
+      requiredApprovals,
+      resolvedAt: null,
+      createdAt: now
+    };
+    if (!localState.withdrawalRequests) localState.withdrawalRequests = [];
+    localState.withdrawalRequests.push(withdrawalRequest);
+
+    const rawMsg = {
+      id: generateId('msg'),
+      planId,
+      senderId: userId,
+      content: `@${user.username} requested a group withdrawal of ₦${numericAmount.toLocaleString('en-NG')}${cleanReason ? ` for "${cleanReason}"` : ''} (1/${requiredApprovals} approvals).`,
+      type: 'ACTIVITY_ALERT',
+      metadata: {
+        event: 'WITHDRAWAL_REQUEST',
+        withdrawalId: wdId,
+        amount: numericAmount,
+        reason: cleanReason,
+        status: 'PENDING',
+        approvals,
+        requiredApprovals
+      },
+      createdAt: now
+    };
+    localState.groupMessages.push(rawMsg);
+
+    for (const m of planMembers) {
+      if (m.userId !== userId) {
+        localState.notifications.push({
+          id: generateId('ntf'),
+          userId: m.userId,
+          title: 'Group Withdrawal Approval Needed',
+          message: `@${user.username} requested to withdraw ₦${numericAmount.toLocaleString('en-NG')} from "${plan.title}". Your approval is required.`,
+          type: 'WITHDRAWAL_REQUEST',
+          isRead: false,
+          metadata: { planId, withdrawalId: wdId, amount: numericAmount },
+          createdAt: now
+        });
+      }
+    }
+
+    return {
+      mode: 'APPROVAL_REQUIRED',
+      withdrawalRequest,
+      alertMessage: {
+        id: rawMsg.id,
+        planId,
+        sender: user,
+        content: rawMsg.content,
+        type: rawMsg.type,
+        metadata: rawMsg.metadata,
+        createdAt: rawMsg.createdAt
+      }
+    };
+  });
+}
+
+async function voteWithdrawalRequest({ planId, withdrawalId, userId, action = 'APPROVE' }) {
+  const normalizedAction = String(action || 'APPROVE').toUpperCase() === 'REJECT' ? 'REJECT' : 'APPROVE';
+  const now = new Date().toISOString();
+  const txRef = `PLS-GWDR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  if (isPostgresMode) {
+    return withTransaction(async (client) => {
+      const memRes = await client.query(
+        'SELECT * FROM savings_members WHERE plan_id = $1 AND user_id = $2 LIMIT 1',
+        [planId, userId]
+      );
+      if (!memRes.rows[0]) {
+        const err = new Error('Only members of this group can approve or reject withdrawals');
+        err.status = 403;
+        throw err;
+      }
+
+      const wdRes = await client.query(
+        'SELECT * FROM withdrawal_requests WHERE id = $1 AND plan_id = $2 FOR UPDATE',
+        [withdrawalId, planId]
+      );
+      const wdRow = wdRes.rows[0];
+      if (!wdRow) {
+        const err = new Error('Withdrawal request not found');
+        err.status = 404;
+        throw err;
+      }
+      if (wdRow.status !== 'PENDING') {
+        const err = new Error(`This withdrawal request has already been ${wdRow.status.toLowerCase()}`);
+        err.status = 400;
+        throw err;
+      }
+
+      const voterRes = await client.query('SELECT * FROM users WHERE id = $1 LIMIT 1', [userId]);
+      const voter = formatSafeUser(voterRes.rows[0]);
+      const reqUserRes = await client.query('SELECT * FROM users WHERE id = $1 LIMIT 1', [wdRow.requester_id]);
+      const requester = formatSafeUser(reqUserRes.rows[0]);
+
+      if (normalizedAction === 'REJECT') {
+        const updatedWd = await client.query(
+          `UPDATE withdrawal_requests SET status = 'REJECTED', resolved_at = $1 WHERE id = $2 RETURNING *`,
+          [now, withdrawalId]
+        );
+
+        const msgRes = await client.query(
+          `INSERT INTO group_messages (id, plan_id, sender_id, content, type, metadata, created_at)
+           VALUES ($1, $2, $3, $4, 'ACTIVITY_ALERT', $5, $6)
+           RETURNING *`,
+          [
+            generateId('msg'),
+            planId,
+            userId,
+            `@${voter.username} declined the withdrawal request of ₦${roundMoney(wdRow.amount).toLocaleString('en-NG')} by @${requester.username}.`,
+            JSON.stringify({ event: 'WITHDRAWAL_REJECTED', withdrawalId }),
+            now
+          ]
+        );
+
+        return {
+          withdrawalRequest: {
+            id: updatedWd.rows[0].id,
+            planId,
+            requesterId: wdRow.requester_id,
+            requester,
+            amount: roundMoney(wdRow.amount),
+            reason: wdRow.reason,
+            status: 'REJECTED',
+            approvals: wdRow.approvals || [],
+            requiredApprovals: Number(wdRow.required_approvals || 2)
+          },
+          disbursed: false,
+          alertMessage: {
+            id: msgRes.rows[0].id,
+            planId,
+            sender: voter,
+            content: msgRes.rows[0].content,
+            type: 'ACTIVITY_ALERT',
+            metadata: msgRes.rows[0].metadata,
+            createdAt: msgRes.rows[0].created_at
+          }
+        };
+      }
+
+      const currentApprovals = Array.isArray(wdRow.approvals) ? [...wdRow.approvals] : [];
+      if (currentApprovals.includes(userId)) {
+        const err = new Error('You have already approved this withdrawal request');
+        err.status = 400;
+        throw err;
+      }
+      currentApprovals.push(userId);
+
+      const requiredApprovals = Number(wdRow.required_approvals || 2);
+      const isApproved = currentApprovals.length >= requiredApprovals;
+      const numericAmount = roundMoney(wdRow.amount);
+
+      let updatedPlanRow = null;
+      let alertMessage = null;
+
+      if (isApproved) {
+        const planRes = await client.query('SELECT * FROM savings_plans WHERE id = $1 FOR UPDATE', [planId]);
+        const planRow = planRes.rows[0];
+        if (!planRow || roundMoney(planRow.current_amount) < numericAmount) {
+          const err = new Error('Insufficient group savings balance to disburse this withdrawal');
+          err.status = 400;
+          throw err;
+        }
+
+        const newCurrent = Math.max(0, roundMoney(Number(planRow.current_amount) - numericAmount));
+        const upPlan = await client.query(
+          'UPDATE savings_plans SET current_amount = $1 WHERE id = $2 RETURNING *',
+          [newCurrent, planId]
+        );
+        updatedPlanRow = upPlan.rows[0];
+
+        await client.query(
+          'UPDATE wallets SET balance = balance + $1, updated_at = $2 WHERE user_id = $3',
+          [numericAmount, now, wdRow.requester_id]
+        );
+
+        await client.query(
+          `INSERT INTO transactions (id, user_id, type, amount, currency, reference, description, metadata, created_at)
+           VALUES ($1, $2, 'SAVINGS_WITHDRAWAL', $3, 'NGN', $4, $5, $6, $7)`,
+          [
+            generateId('txn'),
+            wdRow.requester_id,
+            numericAmount,
+            txRef,
+            `Approved group withdrawal from "${planRow.title}"${wdRow.reason ? `: ${wdRow.reason}` : ''}`,
+            JSON.stringify({ planId, withdrawalId }),
+            now
+          ]
+        );
+
+        await client.query(
+          `INSERT INTO notifications (id, user_id, title, message, type, metadata, created_at)
+           VALUES ($1, $2, 'Group Withdrawal Approved & Disbursed', $3, 'WITHDRAWAL_APPROVED', $4, $5)`,
+          [
+            generateId('ntf'),
+            wdRow.requester_id,
+            `Your group withdrawal of ₦${numericAmount.toLocaleString('en-NG')} from "${planRow.title}" was approved and credited to your wallet.`,
+            JSON.stringify({ planId, withdrawalId, amount: numericAmount }),
+            now
+          ]
+        );
+
+        const msgRes = await client.query(
+          `INSERT INTO group_messages (id, plan_id, sender_id, content, type, metadata, created_at)
+           VALUES ($1, $2, $3, $4, 'ACTIVITY_ALERT', $5, $6)
+           RETURNING *`,
+          [
+            generateId('msg'),
+            planId,
+            userId,
+            `Group withdrawal of ₦${numericAmount.toLocaleString('en-NG')} to @${requester.username} approved (${currentApprovals.length}/${requiredApprovals}) and disbursed to wallet.`,
+            JSON.stringify({ event: 'WITHDRAWAL_APPROVED', withdrawalId, amount: numericAmount }),
+            now
+          ]
+        );
+        alertMessage = {
+          id: msgRes.rows[0].id,
+          planId,
+          sender: voter,
+          content: msgRes.rows[0].content,
+          type: 'ACTIVITY_ALERT',
+          metadata: msgRes.rows[0].metadata,
+          createdAt: msgRes.rows[0].created_at
+        };
+      } else {
+        const msgRes = await client.query(
+          `INSERT INTO group_messages (id, plan_id, sender_id, content, type, metadata, created_at)
+           VALUES ($1, $2, $3, $4, 'ACTIVITY_ALERT', $5, $6)
+           RETURNING *`,
+          [
+            generateId('msg'),
+            planId,
+            userId,
+            `@${voter.username} approved @${requester.username}'s withdrawal request (${currentApprovals.length}/${requiredApprovals} approvals).`,
+            JSON.stringify({ event: 'WITHDRAWAL_VOTE', withdrawalId }),
+            now
+          ]
+        );
+        alertMessage = {
+          id: msgRes.rows[0].id,
+          planId,
+          sender: voter,
+          content: msgRes.rows[0].content,
+          type: 'ACTIVITY_ALERT',
+          metadata: msgRes.rows[0].metadata,
+          createdAt: msgRes.rows[0].created_at
+        };
+      }
+
+      const newStatus = isApproved ? 'APPROVED' : 'PENDING';
+      await client.query(
+        `UPDATE withdrawal_requests
+         SET approvals = $1, status = $2, resolved_at = $3
+         WHERE id = $4`,
+        [JSON.stringify(currentApprovals), newStatus, isApproved ? now : null, withdrawalId]
+      );
+
+      return {
+        withdrawalRequest: {
+          id: wdRow.id,
+          planId,
+          requesterId: wdRow.requester_id,
+          requester,
+          amount: numericAmount,
+          reason: wdRow.reason,
+          status: newStatus,
+          approvals: currentApprovals,
+          requiredApprovals
+        },
+        disbursed: isApproved,
+        plan: updatedPlanRow
+          ? {
+              id: updatedPlanRow.id,
+              currentAmount: roundMoney(updatedPlanRow.current_amount),
+              targetAmount: roundMoney(updatedPlanRow.target_amount)
+            }
+          : null,
+        alertMessage
+      };
+    });
+  }
+
+  return withTransaction(async () => {
+    const isMember = localState.savingsMembers.some(
+      (m) => m.planId === planId && m.userId === userId
+    );
+    if (!isMember) {
+      const err = new Error('Only members of this group can approve or reject withdrawals');
+      err.status = 403;
+      throw err;
+    }
+
+    const wd = (localState.withdrawalRequests || []).find(
+      (w) => w.id === withdrawalId && w.planId === planId
+    );
+    if (!wd) {
+      const err = new Error('Withdrawal request not found');
+      err.status = 404;
+      throw err;
+    }
+    if (wd.status !== 'PENDING') {
+      const err = new Error(`This withdrawal request has already been ${wd.status.toLowerCase()}`);
+      err.status = 400;
+      throw err;
+    }
+
+    const voter = formatSafeUser(localState.users.find((u) => u.id === userId));
+    const requester = formatSafeUser(localState.users.find((u) => u.id === wd.requesterId));
+
+    if (normalizedAction === 'REJECT') {
+      wd.status = 'REJECTED';
+      wd.resolvedAt = now;
+
+      const rawMsg = {
+        id: generateId('msg'),
+        planId,
+        senderId: userId,
+        content: `@${voter.username} declined the withdrawal request of ₦${roundMoney(wd.amount).toLocaleString('en-NG')} by @${requester.username}.`,
+        type: 'ACTIVITY_ALERT',
+        metadata: { event: 'WITHDRAWAL_REJECTED', withdrawalId },
+        createdAt: now
+      };
+      localState.groupMessages.push(rawMsg);
+
+      return {
+        withdrawalRequest: { ...wd, requester },
+        disbursed: false,
+        alertMessage: {
+          id: rawMsg.id,
+          planId,
+          sender: voter,
+          content: rawMsg.content,
+          type: rawMsg.type,
+          metadata: rawMsg.metadata,
+          createdAt: rawMsg.createdAt
+        }
+      };
+    }
+
+    if (wd.approvals.includes(userId)) {
+      const err = new Error('You have already approved this withdrawal request');
+      err.status = 400;
+      throw err;
+    }
+    wd.approvals.push(userId);
+
+    const isApproved = wd.approvals.length >= wd.requiredApprovals;
+    const numericAmount = roundMoney(wd.amount);
+    const plan = localState.savingsPlans.find((p) => p.id === planId);
+
+    let alertContent = `@${voter.username} approved @${requester.username}'s withdrawal request (${wd.approvals.length}/${wd.requiredApprovals} approvals).`;
+
+    if (isApproved) {
+      if (!plan || roundMoney(plan.currentAmount) < numericAmount) {
+        const err = new Error('Insufficient group savings balance to disburse this withdrawal');
+        err.status = 400;
+        throw err;
+      }
+
+      plan.currentAmount = Math.max(0, roundMoney(plan.currentAmount - numericAmount));
+      wd.status = 'APPROVED';
+      wd.resolvedAt = now;
+
+      const reqWallet = localState.wallets.find((w) => w.userId === wd.requesterId);
+      reqWallet.balance = roundMoney(reqWallet.balance + numericAmount);
+      reqWallet.updatedAt = now;
+
+      localState.transactions.push({
+        id: generateId('txn'),
+        userId: wd.requesterId,
+        type: 'SAVINGS_WITHDRAWAL',
+        direction: 'CREDIT',
+        amount: numericAmount,
+        currency: 'NGN',
+        reference: txRef,
+        description: `Approved group withdrawal from "${plan.title}"${wd.reason ? `: ${wd.reason}` : ''}`,
+        metadata: { planId, withdrawalId },
+        createdAt: now
+      });
+
+      localState.notifications.push({
+        id: generateId('ntf'),
+        userId: wd.requesterId,
+        title: 'Group Withdrawal Approved & Disbursed',
+        message: `Your group withdrawal of ₦${numericAmount.toLocaleString('en-NG')} from "${plan.title}" was approved and credited to your wallet.`,
+        type: 'WITHDRAWAL_APPROVED',
+        isRead: false,
+        metadata: { planId, withdrawalId, amount: numericAmount },
+        createdAt: now
+      });
+
+      alertContent = `Group withdrawal of ₦${numericAmount.toLocaleString('en-NG')} to @${requester.username} approved (${wd.approvals.length}/${wd.requiredApprovals}) and disbursed to wallet.`;
+    }
+
+    const rawMsg = {
+      id: generateId('msg'),
+      planId,
+      senderId: userId,
+      content: alertContent,
+      type: 'ACTIVITY_ALERT',
+      metadata: {
+        event: isApproved ? 'WITHDRAWAL_APPROVED' : 'WITHDRAWAL_VOTE',
+        withdrawalId,
+        amount: numericAmount
+      },
+      createdAt: now
+    };
+    localState.groupMessages.push(rawMsg);
+
+    return {
+      withdrawalRequest: { ...wd, requester },
+      disbursed: isApproved,
+      plan: plan ? { ...plan } : null,
+      alertMessage: {
+        id: rawMsg.id,
+        planId,
+        sender: voter,
+        content: rawMsg.content,
+        type: rawMsg.type,
+        metadata: rawMsg.metadata,
+        createdAt: rawMsg.createdAt
+      }
+    };
+  });
+}
+
 module.exports = {
   initDb,
   resetDb,
@@ -2257,6 +3061,8 @@ module.exports = {
   joinGroupPlanByInviteCode,
   getSavingsPlanDetails,
   contributeToSavingsPlan,
+  requestOrExecuteWithdrawal,
+  voteWithdrawalRequest,
   listGroupMessages,
   createGroupMessage,
   executeP2PTransfer,

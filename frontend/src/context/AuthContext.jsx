@@ -8,7 +8,8 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('pulse_token');
+    const rawToken = localStorage.getItem('pulse_token');
+    const token = rawToken && rawToken !== 'null' && rawToken !== 'undefined' ? rawToken.trim() : null;
     if (token) {
       api.auth.getMe()
         .then(res => {
@@ -16,13 +17,34 @@ export function AuthProvider({ children }) {
         })
         .catch(err => {
           console.error("Auth initialization error:", err);
-          localStorage.removeItem('pulse_token');
-          setUser(null);
+          if (err?.status === 401) {
+            localStorage.removeItem('pulse_token');
+            setUser(null);
+          }
         })
         .finally(() => setLoading(false));
     } else {
+      localStorage.removeItem('pulse_token');
       setLoading(false);
     }
+
+    const handleUnauthorized = () => {
+      localStorage.removeItem('pulse_token');
+      setUser(null);
+    };
+
+    const handleStorage = (e) => {
+      if (e.key === 'pulse_token' && !e.newValue) {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener('pulse:unauthorized', handleUnauthorized);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('pulse:unauthorized', handleUnauthorized);
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   const login = async (emailOrUsername, password) => {

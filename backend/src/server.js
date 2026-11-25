@@ -124,6 +124,22 @@ const ENDPOINTS_CATALOG = [
     response: '{ plan, walletBalance, contribution }'
   },
   {
+    category: 'Savings',
+    method: 'POST',
+    path: '/api/savings/:id/withdraw',
+    auth: true,
+    body: { amount: 5000, reason: 'Optional reason (required for group requests)' },
+    response: '{ mode: "INSTANT" | "APPROVAL_REQUIRED", plan?, walletBalance?, withdrawalRequest? }'
+  },
+  {
+    category: 'Savings',
+    method: 'POST',
+    path: '/api/savings/:id/withdrawals/:withdrawalId/approve',
+    auth: true,
+    body: { action: 'APPROVE' },
+    response: '{ withdrawalRequest, disbursed, plan? }'
+  },
+  {
     category: 'Group Chat',
     method: 'GET',
     path: '/api/savings/:id/messages',

@@ -107,4 +107,72 @@ router.post('/savings/:id/contribute', requireAuth, async (req, res, next) => {
   }
 });
 
+// POST /api/savings/:id/withdraw
+router.post('/savings/:id/withdraw', requireAuth, async (req, res, next) => {
+  try {
+    const { amount, reason } = req.body || {};
+    const result = await db.requestOrExecuteWithdrawal({
+      planId: req.params.id,
+      userId: req.user.id,
+      amount,
+      reason
+    });
+
+    if (result.alertMessage) {
+      emitToPlan(req.params.id, 'chat:message', result.alertMessage);
+    }
+    emitToPlan(req.params.id, 'savings:updated', {
+      planId: req.params.id,
+      mode: result.mode
+    });
+
+    if (result.mode === 'INSTANT') {
+      emitToUser(req.user.id, 'wallet:updated', {
+        balance: result.walletBalance,
+        currency: 'NGN'
+      });
+    }
+
+    return res.status(result.mode === 'APPROVAL_REQUIRED' ? 201 : 200).json(result);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// POST /api/savings/:id/withdrawals/:withdrawalId/approve
+router.post('/savings/:id/withdrawals/:withdrawalId/approve', requireAuth, async (req, res, next) => {
+  try {
+    const { action = 'APPROVE' } = req.body || {};
+    const result = await db.voteWithdrawalRequest({
+      planId: req.params.id,
+      withdrawalId: req.params.withdrawalId,
+      userId: req.user.id,
+      action
+    });
+
+    if (result.alertMessage) {
+      emitToPlan(req.params.id, 'chat:message', result.alertMessage);
+    }
+    emitToPlan(req.params.id, 'savings:updated', {
+      planId: req.params.id,
+      withdrawalRequest: result.withdrawalRequest,
+      disbursed: result.disbursed
+    });
+
+    if (result.disbursed && result.withdrawalRequest?.requesterId) {
+      emitToUser(result.withdrawalRequest.requesterId, 'wallet:updated', {
+        currency: 'NGN'
+      });
+      emitToUser(result.withdrawalRequest.requesterId, 'notification:new', {
+        title: 'Group Withdrawal Approved',
+        message: `₦${Number(result.withdrawalRequest.amount).toLocaleString('en-NG')} has been credited to your wallet.`
+      });
+    }
+
+    return res.json(result);
+  } catch (err) {
+    return next(err);
+  }
+});
+
 module.exports = router;

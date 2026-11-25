@@ -52,7 +52,7 @@ export default function RequestPaymentModal({ isOpen, onClose, planId, onCreated
             placeholder="What is this payment request for?"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
+            className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-base sm:text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
           />
         </div>
 
@@ -68,7 +68,7 @@ export default function RequestPaymentModal({ isOpen, onClose, planId, onCreated
               placeholder="Enter amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
+              className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-base sm:text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
             />
           </div>
         </div>

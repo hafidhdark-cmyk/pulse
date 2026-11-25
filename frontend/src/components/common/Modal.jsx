@@ -26,24 +26,26 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
       />
 
       <div
-        className={`relative w-full ${maxWidth} bg-white border border-slate-200 rounded-t-2xl sm:rounded-xl shadow-xl overflow-hidden z-10 max-h-[92vh] flex flex-col`}
+        className={`relative w-full ${maxWidth} bg-white border border-slate-200 rounded-t-2xl sm:rounded-xl shadow-xl overflow-hidden z-10 max-h-[90dvh] flex flex-col`}
       >
-        <div className="sm:hidden flex justify-center pt-2.5 pb-1">
+        <div className="sm:hidden flex justify-center pt-2.5 pb-1 shrink-0">
           <div className="w-10 h-1 bg-slate-300 rounded-full" />
         </div>
 
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white">
-          <h3 className="text-sm sm:text-base font-bold text-slate-900">{title}</h3>
+        <div className="flex items-center justify-between px-5 py-3.5 sm:py-4 border-b border-slate-200 bg-white shrink-0">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900 truncate pr-2">{title}</h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+            className="p-2 -mr-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
             aria-label="Close modal"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div className="p-5 pb-8 sm:pb-5 overflow-y-auto">{children}</div>
+        <div className="p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-5 overflow-y-auto">
+          {children}
+        </div>
       </div>
     </div>
   );

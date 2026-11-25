@@ -446,3 +446,68 @@ test('5. Payment Request / Bill Split & Notifications — Create ₦5,000 reques
   assert.equal(markRead.data.success, true);
   assert.equal(markRead.data.unreadCount, 0);
 });
+
+test('6. Withdrawals & Personal Chat Guard — Instant withdrawal on Personal, Group approval required before disbursement, and reject Personal chat', async () => {
+  // Personal plans reject chat messages
+  const personalChatAttempt = await api(`/api/savings/${personalPlanId}/messages`, {
+    method: 'POST',
+    token: hafidhToken,
+    body: { content: 'Should not allow chat on personal plan' }
+  });
+  assert.equal(personalChatAttempt.status, 400);
+
+  // @hafidh contributes ₦3,000 to Personal plan (balance was 5,000 -> 2,000)
+  const pContrib = await api(`/api/savings/${personalPlanId}/contribute`, {
+    method: 'POST',
+    token: hafidhToken,
+    body: { amount: 3000 }
+  });
+  assert.equal(pContrib.status, 200);
+  assert.equal(pContrib.data.walletBalance, 2000);
+
+  // Instant withdrawal of ₦2,000 from Personal plan back to wallet (balance 2,000 -> 4,000)
+  const pWithdraw = await api(`/api/savings/${personalPlanId}/withdraw`, {
+    method: 'POST',
+    token: hafidhToken,
+    body: { amount: 2000, reason: 'Urgent repair' }
+  });
+  assert.equal(pWithdraw.status, 200);
+  assert.equal(pWithdraw.data.mode, 'INSTANT');
+  assert.equal(pWithdraw.data.walletBalance, 4000);
+  assert.equal(pWithdraw.data.plan.currentAmount, 1000);
+
+  // @lam requests withdrawal of ₦10,000 from Group plan (currently 25,000)
+  const gWithdrawReq = await api(`/api/savings/${groupPlanId}/withdraw`, {
+    method: 'POST',
+    token: lamToken,
+    body: { amount: 10000, reason: 'Nobus server renewal' }
+  });
+  assert.equal(gWithdrawReq.status, 201);
+  assert.equal(gWithdrawReq.data.mode, 'APPROVAL_REQUIRED');
+  assert.equal(gWithdrawReq.data.withdrawalRequest.status, 'PENDING');
+  assert.equal(gWithdrawReq.data.withdrawalRequest.approvals.length, 1);
+
+  const withdrawalId = gWithdrawReq.data.withdrawalRequest.id;
+
+  // Requester (@lam) cannot approve their own request a second time (400)
+  const doubleVote = await api(`/api/savings/${groupPlanId}/withdrawals/${withdrawalId}/approve`, {
+    method: 'POST',
+    token: lamToken,
+    body: { action: 'APPROVE' }
+  });
+  assert.equal(doubleVote.status, 400);
+
+  // @hafidh approves the group withdrawal -> disbursed to @lam's wallet (20,000 -> 30,000)
+  const hafidhApprove = await api(`/api/savings/${groupPlanId}/withdrawals/${withdrawalId}/approve`, {
+    method: 'POST',
+    token: hafidhToken,
+    body: { action: 'APPROVE' }
+  });
+  assert.equal(hafidhApprove.status, 200);
+  assert.equal(hafidhApprove.data.disbursed, true);
+  assert.equal(hafidhApprove.data.withdrawalRequest.status, 'APPROVED');
+  assert.equal(hafidhApprove.data.plan.currentAmount, 15000);
+
+  const lamWalletAfter = await api('/api/wallet', { token: lamToken });
+  assert.equal(lamWalletAfter.data.balance, 30000);
+});

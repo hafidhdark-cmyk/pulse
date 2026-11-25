@@ -87,7 +87,7 @@ export default function CreatePlanModal({ isOpen, onClose, onPlanCreated }) {
             placeholder={type === 'GROUP' ? 'Enter group plan name' : 'Enter personal goal name'}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
+            className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-base sm:text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
           />
         </div>
 
@@ -100,7 +100,7 @@ export default function CreatePlanModal({ isOpen, onClose, onPlanCreated }) {
             placeholder="Purpose of this savings plan"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
+            className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg text-base sm:text-sm text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition"
           />
         </div>
 
@@ -118,7 +118,7 @@ export default function CreatePlanModal({ isOpen, onClose, onPlanCreated }) {
               placeholder="Enter target amount"
               value={targetAmount}
               onChange={(e) => setTargetAmount(e.target.value)}
-              className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
+              className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-base sm:text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
             />
           </div>
         </div>

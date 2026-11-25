@@ -51,49 +51,49 @@ export default function WalletDashboardView({
   const personalPlansCount = (plans || []).filter((p) => p.type === 'PERSONAL').length;
 
   return (
-    <div className="space-y-5">
-      {/* Top Row: Aligned 7-Col / 5-Col Grid with Equalized Heights */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+    <div className="space-y-4 sm:space-y-5">
+      {/* Top Row: Aligned 7-Col / 5-Col Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
         {/* Left 7 Cols: Primary Wallet Card */}
-        <div className="lg:col-span-7 bg-[#0F172A] text-white border border-slate-800 rounded-xl p-5 sm:p-6 flex flex-col justify-between h-full">
+        <div className="lg:col-span-7 bg-[#0F172A] text-white border border-slate-800 rounded-xl p-4 sm:p-6 flex flex-col justify-between h-full">
           <div>
-            <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                   Available Balance
                 </span>
-                <span className="text-[11px] font-mono text-slate-300 bg-slate-800 border border-slate-700 px-2 py-0.5 rounded">
+                <span className="text-[10px] sm:text-[11px] font-mono text-slate-300 bg-slate-800 border border-slate-700 px-2 py-0.5 rounded">
                   NGN ₦
                 </span>
               </div>
 
               <button
                 onClick={() => setShowBalance(!showBalance)}
-                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition text-slate-300"
+                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition text-slate-300"
                 title={showBalance ? 'Hide balance' : 'Show balance'}
               >
                 {showBalance ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
 
-            <div className="mb-6">
-              <h2 className="text-3xl sm:text-4xl font-bold font-mono tracking-tight tabular-nums text-white">
+            <div className="mb-5 sm:mb-6">
+              <h2 className="text-2xl sm:text-4xl font-bold font-mono tracking-tight tabular-nums text-white break-all">
                 {showBalance ? formatNaira(balance, true) : '₦ ••••••••'}
               </h2>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-400">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-400">
                 <span>
                   Account: <strong className="text-slate-200 font-semibold">@{user?.username}</strong>
                 </span>
-                <span>•</span>
-                <span>Instant P2P &amp; Group Vault Funding Ready</span>
+                <span className="hidden sm:inline">•</span>
+                <span className="hidden sm:inline">Instant P2P &amp; Group Vault Funding Ready</span>
               </div>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="pt-3.5 sm:pt-4 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
             <button
               onClick={onOpenFund}
-              className="flex items-center justify-center gap-1.5 h-10 px-3 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-semibold text-xs rounded-lg transition"
+              className="flex items-center justify-center gap-1.5 min-h-[44px] sm:h-10 px-3 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-semibold text-xs rounded-lg transition active:scale-[0.98]"
             >
               <Plus size={15} strokeWidth={2.5} />
               <span>Fund Wallet</span>
@@ -101,7 +101,7 @@ export default function WalletDashboardView({
 
             <button
               onClick={onOpenP2P}
-              className="flex items-center justify-center gap-1.5 h-10 px-3 bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs rounded-lg border border-slate-700 transition"
+              className="flex items-center justify-center gap-1.5 min-h-[44px] sm:h-10 px-3 bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs rounded-lg border border-slate-700 transition active:scale-[0.98]"
             >
               <Send size={14} />
               <span>Send Money</span>
@@ -109,7 +109,7 @@ export default function WalletDashboardView({
 
             <button
               onClick={onOpenCreatePlan}
-              className="flex items-center justify-center gap-1.5 h-10 px-3 bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs rounded-lg border border-slate-700 transition"
+              className="flex items-center justify-center gap-1.5 min-h-[44px] sm:h-10 px-3 bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs rounded-lg border border-slate-700 transition active:scale-[0.98]"
             >
               <Plus size={14} />
               <span>New Plan</span>
@@ -117,7 +117,7 @@ export default function WalletDashboardView({
 
             <button
               onClick={onOpenJoinPlan}
-              className="flex items-center justify-center gap-1.5 h-10 px-3 bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs rounded-lg border border-slate-700 transition"
+              className="flex items-center justify-center gap-1.5 min-h-[44px] sm:h-10 px-3 bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs rounded-lg border border-slate-700 transition active:scale-[0.98]"
             >
               <KeyRound size={14} />
               <span>Join Group</span>
@@ -126,17 +126,17 @@ export default function WalletDashboardView({
         </div>
 
         {/* Right 5 Cols: Total Saved & Collaborative Vaults Summary Card */}
-        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 flex flex-col justify-between h-full">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
+        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col justify-between h-full">
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Total Saved
                 </span>
                 <Badge variant="primary">{plans.length} Active</Badge>
               </div>
 
-              <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums">
+              <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums break-all">
                 {showBalance ? formatNaira(totalSaved, true) : '₦ ••••••••'}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
@@ -147,24 +147,24 @@ export default function WalletDashboardView({
             <img
               src={vaultIllustration}
               alt="Collaborative savings vault"
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-200 shrink-0"
+              className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-200 shrink-0"
             />
           </div>
 
-          <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3 text-xs">
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-              <span className="text-slate-600 font-medium flex items-center gap-1.5">
-                <Users size={14} className="text-[#1D4ED8]" />
-                <span>Group Pools</span>
+          <div className="mt-4 sm:mt-5 pt-3.5 sm:pt-4 border-t border-slate-100 grid grid-cols-2 gap-2.5 sm:gap-3 text-xs">
+            <div className="p-2.5 sm:p-3 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
+              <span className="text-slate-600 font-medium flex items-center gap-1.5 truncate">
+                <Users size={14} className="text-[#1D4ED8] shrink-0" />
+                <span className="truncate">Groups</span>
               </span>
               <span className="font-mono font-bold text-slate-900 tabular-nums">
                 {groupPlansCount}
               </span>
             </div>
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-              <span className="text-slate-600 font-medium flex items-center gap-1.5">
-                <User size={14} className="text-slate-700" />
-                <span>Personal</span>
+            <div className="p-2.5 sm:p-3 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
+              <span className="text-slate-600 font-medium flex items-center gap-1.5 truncate">
+                <User size={14} className="text-slate-700 shrink-0" />
+                <span className="truncate">Personal</span>
               </span>
               <span className="font-mono font-bold text-slate-900 tabular-nums">
                 {personalPlansCount}
@@ -174,11 +174,11 @@ export default function WalletDashboardView({
         </div>
       </div>
 
-      {/* Bottom Row: Aligned 7-Col / 5-Col Grid with Equalized Heights */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+      {/* Bottom Row: Aligned 7-Col / 5-Col Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
         {/* Left 7 Cols: Active Savings Plans Card */}
         <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col h-full">
-          <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Savings Plans</h3>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -186,12 +186,12 @@ export default function WalletDashboardView({
               </p>
             </div>
 
-            <div className="flex gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200">
+            <div className="grid grid-cols-3 sm:flex gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200 w-full sm:w-auto">
               {['ALL', 'GROUP', 'PERSONAL'].map((type) => (
                 <button
                   key={type}
                   onClick={() => setPlanFilter(type)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition ${
+                  className={`px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-semibold transition text-center ${
                     planFilter === type
                       ? 'bg-white text-slate-900 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
@@ -203,7 +203,7 @@ export default function WalletDashboardView({
             </div>
           </div>
 
-          <div className="p-5 flex-1 flex flex-col justify-center">
+          <div className="p-4 sm:p-5 flex-1 flex flex-col justify-center">
             {filteredPlans.length === 0 ? (
               <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
                 <div className="sm:col-span-5">
@@ -219,18 +219,18 @@ export default function WalletDashboardView({
                     Save toward shared goals with your circle
                   </h4>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Launch a group pool with a unique invite code, track member contributions on a live leaderboard, or set a personal target.
+                    Launch a group pool with an invite code, track member contributions on a live leaderboard, or set a personal target.
                   </p>
-                  <div className="pt-1 flex flex-wrap items-center gap-2">
+                  <div className="pt-1 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
                     <button
                       onClick={onOpenCreatePlan}
-                      className="h-9 px-4 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-semibold rounded-lg transition"
+                      className="min-h-[40px] px-3.5 bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-semibold rounded-lg transition"
                     >
-                      Create Savings Plan
+                      Create Plan
                     </button>
                     <button
                       onClick={onOpenJoinPlan}
-                      className="h-9 px-4 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-semibold rounded-lg transition"
+                      className="min-h-[40px] px-3.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-semibold rounded-lg transition"
                     >
                       Join with Code
                     </button>
@@ -243,9 +243,9 @@ export default function WalletDashboardView({
                   <div
                     key={plan.id}
                     onClick={() => onSelectPlan(plan.id)}
-                    className="group p-4 rounded-lg border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/60 transition cursor-pointer"
+                    className="group p-3.5 sm:p-4 rounded-lg border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/60 transition cursor-pointer"
                   >
-                    <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-start justify-between gap-3 mb-2.5 sm:mb-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-sm text-slate-900 group-hover:text-[#1D4ED8] transition truncate">
@@ -279,7 +279,7 @@ export default function WalletDashboardView({
                       height="h-2"
                     />
 
-                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-500">
                       <div className="flex items-center gap-2 flex-wrap">
                         {plan.type === 'GROUP' && plan.inviteCode && (
                           <span className="font-mono text-[11px] bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-200 font-semibold">
@@ -290,11 +290,9 @@ export default function WalletDashboardView({
                           {plan.type === 'GROUP' ? <Users size={12} /> : <User size={12} />}
                           {plan.memberCount || 1} {(plan.memberCount || 1) === 1 ? 'member' : 'members'}
                         </span>
-                        <span>•</span>
-                        <span className="capitalize">{(plan.frequency || 'FLEXIBLE').toLowerCase()}</span>
                       </div>
 
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#1D4ED8]">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#1D4ED8] shrink-0">
                         <span>View</span>
                         <ArrowRight size={13} />
                       </span>
@@ -308,7 +306,7 @@ export default function WalletDashboardView({
 
         {/* Right 5 Cols: Transaction Ledger Card */}
         <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col h-full">
-          <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-2">
+          <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-200 flex items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Transactions</h3>
               <p className="text-xs text-slate-500 mt-0.5">Recent account activity</p>
@@ -317,13 +315,14 @@ export default function WalletDashboardView({
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-medium focus:outline-none focus:border-[#1D4ED8]"
+              className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 sm:py-1.5 text-slate-700 font-medium focus:outline-none focus:border-[#1D4ED8]"
             >
               <option value="ALL">All Types</option>
               <option value="WALLET_FUND">Deposits</option>
-              <option value="P2P_SEND">Transfers Sent</option>
-              <option value="P2P_RECEIVE">Transfers Received</option>
+              <option value="P2P_SEND">Sent</option>
+              <option value="P2P_RECEIVE">Received</option>
               <option value="SAVINGS_CONTRIBUTION">Savings</option>
+              <option value="SAVINGS_WITHDRAWAL">Withdrawals</option>
             </select>
           </div>
 
@@ -342,29 +341,29 @@ export default function WalletDashboardView({
                 <div className="pt-1 flex items-center justify-center gap-2">
                   <button
                     onClick={onOpenFund}
-                    className="h-9 px-3.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition"
+                    className="min-h-[40px] px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition"
                   >
                     Fund Wallet
                   </button>
                   <button
                     onClick={onOpenP2P}
-                    className="h-9 px-3.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition"
+                    className="min-h-[40px] px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition"
                   >
                     Send Money
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto">
+              <div className="divide-y divide-slate-100 max-h-[460px] lg:max-h-[520px] overflow-y-auto">
                 {filteredTransactions.map((txn) => {
                   const isCredit =
                     txn.direction === 'CREDIT' ||
-                    ['WALLET_FUND', 'FUND', 'P2P_RECEIVE'].includes(txn.type);
+                    ['WALLET_FUND', 'FUND', 'P2P_RECEIVE', 'SAVINGS_WITHDRAWAL'].includes(txn.type);
 
                   return (
                     <div
                       key={txn.id}
-                      className="px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-slate-50/50 transition"
+                      className="px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-slate-50/50 transition"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div

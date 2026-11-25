@@ -4,7 +4,8 @@ let socketInstance = null;
 let currentToken = null;
 
 export function getSocket() {
-  const token = localStorage.getItem('pulse_token');
+  const rawToken = localStorage.getItem('pulse_token');
+  const token = rawToken && rawToken !== 'null' && rawToken !== 'undefined' ? rawToken.trim() : null;
 
   if (socketInstance && currentToken !== token) {
     socketInstance.disconnect();

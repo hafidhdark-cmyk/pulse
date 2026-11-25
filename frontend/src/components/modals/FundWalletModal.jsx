@@ -17,8 +17,9 @@ export default function FundWalletModal({ isOpen, onClose }) {
 
   const handleFund = async (e) => {
     e.preventDefault();
-    const finalAmount = customAmount ? Number(customAmount) : amount;
-    if (!finalAmount || finalAmount <= 0) {
+    const parsedCustom = customAmount.trim() !== '' ? Number(customAmount) : null;
+    const finalAmount = parsedCustom !== null ? parsedCustom : amount;
+    if (!Number.isFinite(finalAmount) || finalAmount <= 0) {
       showToast('Please enter a valid amount', 'error');
       return;
     }
@@ -104,7 +105,7 @@ export default function FundWalletModal({ isOpen, onClose }) {
               placeholder="Enter amount"
               value={customAmount}
               onChange={(e) => setCustomAmount(e.target.value)}
-              className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
+              className="w-full h-11 pl-8 pr-4 bg-white border border-slate-300 rounded-lg text-base sm:text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1D4ED8] transition tabular-nums"
             />
           </div>
         </div>

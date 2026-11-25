@@ -85,6 +85,19 @@ CREATE TABLE IF NOT EXISTS payment_requests (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS withdrawal_requests (
+  id VARCHAR(36) PRIMARY KEY,
+  plan_id VARCHAR(36) NOT NULL REFERENCES savings_plans(id) ON DELETE CASCADE,
+  requester_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount NUMERIC(15, 2) NOT NULL CHECK (amount > 0),
+  reason TEXT DEFAULT '',
+  status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+  approvals JSONB NOT NULL DEFAULT '[]'::jsonb,
+  required_approvals INTEGER NOT NULL DEFAULT 2,
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS notifications (
   id VARCHAR(36) PRIMARY KEY,
   user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,

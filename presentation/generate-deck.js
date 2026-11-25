@@ -191,9 +191,6 @@ const html = `<!DOCTYPE html>
   <div class="logo-white-pill">
     <img src="${logoSrc}" alt="Pulse" />
   </div>
-  <div style="position:absolute; top:65px; right:56px; font-size:13px; font-weight:500; color:rgba(255,255,255,0.92);">
-    pulse.myupside.site
-  </div>
 
   <!-- Concentric rings + Pulse ECG line -->
   <svg style="position:absolute; top:0; left:0; width:960px; height:540px; pointer-events:none;" viewBox="0 0 960 540">
@@ -668,6 +665,9 @@ const html = `<!DOCTYPE html>
   </div>
 </section>
 
+
+
+
 <!-- ==================== SLIDE 10: CLOSING ==================== -->
 <section class="slide slide-gradient">
   <div class="logo-white-pill">
@@ -679,23 +679,35 @@ const html = `<!DOCTYPE html>
     <circle cx="780" cy="400" r="240" fill="rgba(255,255,255,0.06)" />
   </svg>
 
-  <h1 style="position:absolute; top:176px; left:56px; font-size:48px; font-weight:700; color:#ffffff; letter-spacing:-0.6px;">
-    Let’s Build Together
-  </h1>
-  <p style="position:absolute; top:242px; left:56px; font-size:15px; color:rgba(255,255,255,0.88);">
-    Thank you. Live demo on Nobus Cloud — questions and feedback welcome.
-  </p>
+  <div style="position:absolute; top:148px; left:56px; background:#ffffff; color:#1D4ED8; font-size:9.5px; font-weight:700; padding:5px 14px; border-radius:999px; letter-spacing:0.4px;">
+    RECAP
+  </div>
 
-  <div style="position:absolute; top:320px; left:56px; display:flex; gap:20px;">
-    <div style="width:360px; height:72px; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22); border-radius:14px; padding:14px 20px;">
-      <div style="font-size:9.5px; font-weight:700; letter-spacing:0.5px; color:rgba(255,255,255,0.8); margin-bottom:4px;">LIVE PLATFORM (NOBUS CLOUD)</div>
-      <div style="font-size:17px; font-weight:700; color:#ffffff;">pulse.myupside.site</div>
+  <h1 style="position:absolute; top:182px; left:56px; font-size:44px; font-weight:700; color:#ffffff; letter-spacing:-0.6px; line-height:1.15;">
+    Why Pulse Wins
+  </h1>
+
+  <div style="position:absolute; top:258px; left:56px; right:56px; display:grid; grid-template-columns:repeat(3, 1fr); gap:18px;">
+    <div style="background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22); border-radius:14px; padding:20px 18px;">
+      <div style="font-size:28px; font-weight:700; color:#ffffff; margin-bottom:6px;">&#x20A6;1.4B</div>
+      <div style="font-size:11px; font-weight:600; color:rgba(255,255,255,0.92); margin-bottom:6px;">Obtainable Market</div>
+      <div style="font-size:11px; color:rgba(255,255,255,0.72); line-height:1.45;">1.2M savers across 150K group plans within 36 months.</div>
     </div>
-    <div style="width:400px; height:72px; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22); border-radius:14px; padding:14px 20px;">
-      <div style="font-size:9.5px; font-weight:700; letter-spacing:0.5px; color:rgba(255,255,255,0.8); margin-bottom:4px;">CONTACT THE TEAM</div>
-      <div style="font-size:17px; font-weight:700; color:#ffffff;">founders@pulse.myupside.site</div>
+    <div style="background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22); border-radius:14px; padding:20px 18px;">
+      <div style="font-size:28px; font-weight:700; color:#ffffff; margin-bottom:6px;">9 Features</div>
+      <div style="font-size:11px; font-weight:600; color:rgba(255,255,255,0.92); margin-bottom:6px;">Live on Nobus Cloud</div>
+      <div style="font-size:11px; color:rgba(255,255,255,0.72); line-height:1.45;">Wallets, savings, P2P, group chat, splits, alerts &amp; insights — all shipped.</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22); border-radius:14px; padding:20px 18px;">
+      <div style="font-size:28px; font-weight:700; color:#ffffff; margin-bottom:6px;">3 Revenue</div>
+      <div style="font-size:11px; font-weight:600; color:rgba(255,255,255,0.92); margin-bottom:6px;">Streams from Day One</div>
+      <div style="font-size:11px; color:rgba(255,255,255,0.72); line-height:1.45;">Float yield, funding fees, and Pulse Pro subscriptions.</div>
     </div>
   </div>
+
+  <p style="position:absolute; top:432px; left:56px; width:520px; font-size:14.5px; line-height:1.55; color:rgba(255,255,255,0.88); font-weight:400;">
+    Pulse turns informal savings into a real-time, social-first financial platform. The product is live — let us show you.
+  </p>
 
   <div style="position:absolute; bottom:24px; right:56px; font-size:10.5px; color:rgba(255,255,255,0.85);">
     10 / 10
