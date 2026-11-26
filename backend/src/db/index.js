@@ -128,7 +128,9 @@ function computeLeaderboard(plan, members) {
 let pgPool = null;
 let isPostgresMode = false;
 
-const localStoreFile = path.join(__dirname, '../../.data/local-db.json');
+const localStoreFile = process.env.VERCEL
+  ? path.join(require('os').tmpdir(), 'pulse-local-db.json')
+  : path.join(__dirname, '../../.data/local-db.json');
 let localState = createEmptyState();
 
 function createEmptyState() {
