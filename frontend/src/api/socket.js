@@ -14,7 +14,10 @@ export function getSocket() {
 
   if (!socketInstance) {
     currentToken = token;
-    const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+    const defaultUrl = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+      ? 'http://102.209.47.224:4000'
+      : window.location.origin;
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || defaultUrl;
     socketInstance = io(socketUrl, {
       auth: { token }
     });

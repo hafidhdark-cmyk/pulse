@@ -61,6 +61,11 @@ export default function AuthView() {
               <p className="text-xs sm:text-sm text-blue-50/95 leading-relaxed drop-shadow-sm">
                 Bring shared Ajo and group contributions online—pool funds with your circle, approve withdrawals together, and send instant NGN transfers.
               </p>
+              <div className="pt-1">
+                <span className="inline-flex items-center gap-1.5 text-[10.5px] font-medium text-blue-100 bg-white/10 px-2.5 py-1 rounded-full border border-white/20 backdrop-blur-sm">
+                  ⚡ UI &amp; Architecture Remodel by Layi (@layi)
+                </span>
+              </div>
             </div>
           </div>
 
@@ -218,6 +223,15 @@ export default function AuthView() {
                 </span>
                 <ArrowRight size={15} />
               </button>
+
+              {/* Remodel & Anti-Piracy Disclaimer */}
+              <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-slate-500">
+                <span className="font-medium text-slate-700 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block"></span>
+                  <span>Remodeled &amp; Engineered by <strong>Layi (@layi)</strong></span>
+                </span>
+                <span className="text-[10px] text-slate-400">Authentic Remodel · Not Piracy</span>
+              </div>
             </form>
           </div>
         </div>

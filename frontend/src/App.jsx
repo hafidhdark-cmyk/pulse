@@ -14,6 +14,7 @@ import ContributeModal from './components/modals/ContributeModal';
 import RequestPaymentModal from './components/modals/RequestPaymentModal';
 import NotificationsDrawer from './components/views/NotificationsDrawer';
 import Toast from './components/common/Toast';
+import Watermark from './components/common/Watermark';
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -60,6 +61,7 @@ export default function App() {
     return (
       <>
         <AuthView />
+        <Watermark />
         <Toast />
       </>
     );
@@ -165,6 +167,18 @@ export default function App() {
         onClose={() => setNotificationsOpen(false)}
       />
 
+      {/* Discrete Remodel Attribution Footer */}
+      <footer className="mt-auto py-3 text-center text-xs text-slate-400 border-t border-slate-200/70 max-w-7xl mx-auto w-full px-4 flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2">
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span><strong>Pulse Social Fintech MVP</strong> · Remodeled &amp; Engineered by <strong>Layi (@layi)</strong></span>
+        </div>
+        <div className="text-[11px] text-slate-400">
+          Multiplayer Savings &amp; NGN Wallets · Authorized Architectural Remodel (Not Piracy)
+        </div>
+      </footer>
+
+      <Watermark />
       <Toast />
     </div>
   );

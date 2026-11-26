@@ -249,7 +249,7 @@ const html = `<!DOCTYPE html>
 
   <div class="slide-footer">
     <span>Pulse &nbsp;·&nbsp; Hackathon 2026</span>
-    <span>2 / 10</span>
+    <span>2 / 11</span>
   </div>
 </section>
 
@@ -327,7 +327,7 @@ const html = `<!DOCTYPE html>
 
   <div class="slide-footer">
     <span>Pulse &nbsp;·&nbsp; Hackathon 2026</span>
-    <span>3 / 10</span>
+    <span>3 / 11</span>
   </div>
 </section>
 
@@ -409,7 +409,7 @@ const html = `<!DOCTYPE html>
 
   <div class="slide-footer">
     <span>Pulse &nbsp;·&nbsp; Hackathon 2026</span>
-    <span>4 / 10</span>
+    <span>4 / 11</span>
   </div>
 </section>
 
@@ -452,18 +452,83 @@ const html = `<!DOCTYPE html>
 
   <div class="slide-footer">
     <span>Pulse &nbsp;·&nbsp; Hackathon 2026</span>
-    <span>5 / 10</span>
+    <span>5 / 11</span>
   </div>
 </section>
 
-<!-- ==================== SLIDE 6: PRODUCT PILLARS ==================== -->
+<!-- ==================== SLIDE 6: COMPETITIVE ADVANTAGE ==================== -->
 <section class="slide">
   <div class="bg-circle-tr1"></div>
   <div class="bg-circle-tr2"></div>
   <div class="bg-circle-bl"></div>
   <img class="top-right-logo" src="${logoSrc}" alt="Pulse" />
 
-  <div class="section-tag">05 · PRODUCT PILLARS</div>
+  <div class="section-tag">05 · COMPETITIVE ADVANTAGE</div>
+  <h2 class="slide-title">Why Pulse vs. PiggyVest &amp; Cowrywise</h2>
+  <p class="slide-subtitle">Wealth-tech locks money in silos. Pulse powers collaborative financial velocity.</p>
+
+  <div style="position:absolute; top:160px; left:56px; right:56px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+    <!-- Left Card: Traditional Wealth-Tech -->
+    <div class="card" style="padding:22px 24px; border:1px solid #E2E8F0; background:#FAFCFF;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; border-bottom:1px solid #E2E8F0; padding-bottom:10px;">
+        <span style="font-size:12px; font-weight:700; color:#64748B; letter-spacing:0.5px; text-transform:uppercase;">PiggyVest &amp; Cowrywise</span>
+        <span style="background:#F1F5F9; color:#475569; font-size:10px; font-weight:700; padding:3px 10px; border-radius:999px;">Wealth-Tech Silos</span>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div style="font-size:13.5px; font-weight:700; color:#334155; margin-bottom:2px;">Parallel Solo Buckets</div>
+        <div style="font-size:11.5px; color:#64748B; line-height:1.45;">Users save into isolated pockets alongside friends; no true communal pool or shared ownership.</div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div style="font-size:13.5px; font-weight:700; color:#334155; margin-bottom:2px;">Rigid Penalties &amp; Unilateral Control</div>
+        <div style="font-size:11.5px; color:#64748B; line-height:1.45;">High penalty fees (2.5%–5%) to break locks early, or single-admin payout authority with zero voting.</div>
+      </div>
+
+      <div>
+        <div style="font-size:13.5px; font-weight:700; color:#334155; margin-bottom:2px;">WhatsApp &amp; Bank App Juggling</div>
+        <div style="font-size:11.5px; color:#64748B; line-height:1.45;">Zero native communication. Friends coordinate on WhatsApp, calculate in Splitwise, and paste 10-digit account numbers.</div>
+      </div>
+    </div>
+
+    <!-- Right Card: Pulse Advantage -->
+    <div class="card" style="padding:22px 24px; border:1.5px solid #2563EB; background:#FFFFFF; box-shadow:0 8px 24px rgba(37,99,235,0.08);">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; border-bottom:1px solid #DBEAFE; padding-bottom:10px;">
+        <span style="font-size:12px; font-weight:800; color:#1D4ED8; letter-spacing:0.5px; text-transform:uppercase;">Pulse</span>
+        <span style="background:#EFF6FF; color:#1D4ED8; font-size:10px; font-weight:800; padding:3px 10px; border-radius:999px; border:1px solid #BFDBFE;">Collaborative Velocity</span>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div style="font-size:13.5px; font-weight:700; color:#0F172A; margin-bottom:2px;">True Communal Multiplayer Vault</div>
+        <div style="font-size:11.5px; color:#52627A; line-height:1.45;">Funds pool into a transparent shared vault with real-time member ledgers and contribution shares.</div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div style="font-size:13.5px; font-weight:700; color:#0F172A; margin-bottom:2px;">Democratic Consensus Governance</div>
+        <div style="font-size:11.5px; color:#52627A; line-height:1.45;">Group withdrawals require member vote approval (anti-rogue admin). Personal vaults are 100% instant &amp; penalty-free.</div>
+      </div>
+
+      <div>
+        <div style="font-size:13.5px; font-weight:700; color:#0F172A; margin-bottom:2px;">In-Stream Chat, Splits &amp; P2P Handles</div>
+        <div style="font-size:11.5px; color:#52627A; line-height:1.45;">Embedded group chat, automated milestone alerts, 1-click interactive bill splits, and instant @handle transfers.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>Pulse &nbsp;·&nbsp; Hackathon 2026</span>
+    <span>6 / 11</span>
+  </div>
+</section>
+
+<!-- ==================== SLIDE 7: PRODUCT PILLARS ==================== -->
+<section class="slide">
+  <div class="bg-circle-tr1"></div>
+  <div class="bg-circle-tr2"></div>
+  <div class="bg-circle-bl"></div>
+  <img class="top-right-logo" src="${logoSrc}" alt="Pulse" />
+
+  <div class="section-tag">06 · PRODUCT PILLARS</div>
   <h2 class="slide-title">Built for Trust and Speed</h2>
   <p class="slide-subtitle">Core MVP &amp; bonus capabilities engineered for atomic reliability and real-time collaboration.</p>
 
@@ -503,18 +568,18 @@ const html = `<!DOCTYPE html>
 
   <div class="slide-footer">
     <span>Pulse &nbsp;·&nbsp; Hackathon 2026</span>
-    <span>6 / 10</span>
+    <span>7 / 11</span>
   </div>
 </section>
 
-<!-- ==================== SLIDE 7: MARKET ==================== -->
+<!-- ==================== SLIDE 8: MARKET ==================== -->
 <section class="slide">
   <div class="bg-circle-tr1"></div>
   <div class="bg-circle-tr2"></div>
   <div class="bg-circle-bl"></div>
   <img class="top-right-logo" src="${logoSrc}" alt="Pulse" />
 
-  <div class="section-tag">06 · MARKET</div>
+  <div class="section-tag">07 · MARKET</div>
   <h2 class="slide-title">A Massive Opportunity</h2>
   <p class="slide-subtitle">Informal group savers and peer-to-peer social circles moving to digital rails.</p>
 
@@ -546,18 +611,18 @@ const html = `<!DOCTYPE html>
 
   <div class="slide-footer">
     <span>Pulse &nbsp;·&nbsp; Hackathon 2026</span>
-    <span>7 / 10</span>
+    <span>8 / 11</span>
   </div>
 </section>
 
-<!-- ==================== SLIDE 8: MONETIZATION ==================== -->
+<!-- ==================== SLIDE 9: MONETIZATION ==================== -->
 <section class="slide">
   <div class="bg-circle-tr1"></div>
   <div class="bg-circle-tr2"></div>
   <div class="bg-circle-bl"></div>
   <img class="top-right-logo" src="${logoSrc}" alt="Pulse" />
 
-  <div class="section-tag">07 · MONETIZATION</div>
+  <div class="section-tag">08 · MONETIZATION</div>
   <h2 class="slide-title">How Pulse Makes Money</h2>
   <p class="slide-subtitle">Three clear revenue streams built around wallets, group plans, and transfers.</p>
 
@@ -598,18 +663,18 @@ const html = `<!DOCTYPE html>
 
   <div class="slide-footer">
     <span>Pulse &nbsp;·&nbsp; Hackathon 2026</span>
-    <span>8 / 10</span>
+    <span>9 / 11</span>
   </div>
 </section>
 
-<!-- ==================== SLIDE 9: ARCHITECTURE & ROADMAP ==================== -->
+<!-- ==================== SLIDE 10: ARCHITECTURE & ROADMAP ==================== -->
 <section class="slide">
   <div class="bg-circle-tr1"></div>
   <div class="bg-circle-tr2"></div>
   <div class="bg-circle-bl"></div>
   <img class="top-right-logo" src="${logoSrc}" alt="Pulse" />
 
-  <div class="section-tag">08 · NOBUS ARCHITECTURE &amp; ROADMAP</div>
+  <div class="section-tag">09 · NOBUS ARCHITECTURE &amp; ROADMAP</div>
   <h2 class="slide-title">Live on Nobus Cloud, Ready to Scale</h2>
 
   <!-- Top 4 metric cards -->
@@ -661,14 +726,14 @@ const html = `<!DOCTYPE html>
 
   <div class="slide-footer">
     <span>Pulse &nbsp;·&nbsp; Hackathon 2026</span>
-    <span>9 / 10</span>
+    <span>10 / 11</span>
   </div>
 </section>
 
 
 
 
-<!-- ==================== SLIDE 10: CLOSING ==================== -->
+<!-- ==================== SLIDE 11: CLOSING ==================== -->
 <section class="slide slide-gradient">
   <div class="logo-white-pill">
     <img src="${logoSrc}" alt="Pulse" />
@@ -710,7 +775,7 @@ const html = `<!DOCTYPE html>
   </p>
 
   <div style="position:absolute; bottom:24px; right:56px; font-size:10.5px; color:rgba(255,255,255,0.85);">
-    10 / 10
+    11 / 11
   </div>
 </section>
 
@@ -719,3 +784,16 @@ const html = `<!DOCTYPE html>
 
 fs.writeFileSync(path.join(__dirname, 'Pulse_Hackathon_Deck_Updated.html'), html, 'utf8');
 console.log('Generated Pulse_Hackathon_Deck_Updated.html');
+
+try {
+  const { execSync } = require('child_process');
+  const edge = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+  const htmlPath = path.resolve(__dirname, 'Pulse_Hackathon_Deck_Updated.html');
+  const pdfPath = path.resolve(__dirname, 'Pulse_Hackathon_Deck_Updated.pdf');
+  if (fs.existsSync(edge)) {
+    execSync(`"${edge}" --headless --disable-gpu "--print-to-pdf=${pdfPath}" --no-pdf-header-footer "file:///${htmlPath.replace(/\\/g, '/')}"`);
+    console.log('Generated Pulse_Hackathon_Deck_Updated.pdf');
+  }
+} catch (e) {
+  console.warn('PDF auto-gen note:', e.message);
+}

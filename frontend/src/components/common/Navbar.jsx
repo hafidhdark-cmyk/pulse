@@ -41,6 +41,10 @@ export default function Navbar({
                 <PulseLogo variant="light" size="default" className="hidden sm:inline-flex" />
               </button>
 
+              <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-2 py-0.5 rounded-full select-none" title="Authentic UI & Architecture Remodel by Layi (@layi)">
+                ⚡ Remodel by @layi
+              </span>
+
               <nav className="hidden lg:flex items-center gap-1">
                 <button
                   onClick={() => setActiveTab('wallet')}

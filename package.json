@@ -18,5 +18,8 @@
     "p2p",
     "nobus-cloud"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "vercel": "^67.0.0"
+  }
 }
